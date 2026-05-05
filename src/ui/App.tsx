@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import type { Catalog, CatalogItem, EngineEvent, InstallPlan, InstallState, Scope } from '../types.js';
 import { ItemList } from './ItemList.js';
@@ -7,6 +7,7 @@ import { ConfirmSummary } from './ConfirmSummary.js';
 import { ProgressLog } from './ProgressLog.js';
 import { PostInstallPanel } from './PostInstallPanel.js';
 import { orderForInstall } from '../engine/ordering.js';
+import { Header } from './Header.js';
 
 type Screen = 'select' | 'scope' | 'confirm' | 'run' | 'done';
 
@@ -32,6 +33,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
   const [scopeCursor, setScopeCursor] = useState<0 | 1>(0);
   const [pluginScope, setPluginScope] = useState<Scope>('global');
   const [events, setEvents] = useState<EngineEvent[]>([]);
+  const [runError, setRunError] = useState<string | null>(null);
 
   const newSelected = [...selected].filter((id) => !installedIds.has(id));
   const toUninstallIds = [...installedIds].filter((id) => {
@@ -84,20 +86,31 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
         };
         runInstall(plan, (e) => setEvents((evs) => [...evs, e]))
           .then(() => { setScreen('done'); })
-          .catch((err) => { setScreen('done'); onComplete({ error: String(err) }); });
+          .catch((err) => { setRunError(String(err)); setScreen('done'); });
       }
     } else if (screen === 'done') {
-      if (key.return) { onComplete({}); exit(); }
+      if (key.return) { onComplete(runError ? { error: runError } : {}); exit(); }
     }
   });
 
+  // Auto-dismiss the done screen on clean success when there's nothing for the user to read.
+  const hasPrompt = events.some((e) => e.type === 'post-prompt');
+  useEffect(() => {
+    if (screen !== 'done') return;
+    if (runError) return;
+    if (hasPrompt) return;
+    onComplete({});
+    exit();
+  }, [screen, runError, hasPrompt, onComplete, exit]);
+
+  const headerVariant: 'splash' | 'compact' = 'splash';
+
+  let body: React.JSX.Element;
   if (screen === 'select') {
-    return <ItemList items={orderedForUI} states={initialStates} selected={selected} cursor={cursor} />;
-  }
-  if (screen === 'scope') {
-    return <PluginScopePrompt cursor={scopeCursor} hasRepo={!!repoRoot} />;
-  }
-  if (screen === 'confirm') {
+    body = <ItemList items={orderedForUI} states={initialStates} selected={selected} cursor={cursor} />;
+  } else if (screen === 'scope') {
+    body = <PluginScopePrompt cursor={scopeCursor} hasRepo={!!repoRoot} />;
+  } else if (screen === 'confirm') {
     const uninstallItems = toUninstallIds.map((id) => items.find((i) => i.id === id)!);
     const installItems = orderForInstall(newSelected.map((id) => items.find((i) => i.id === id)!));
     const lines: string[] = [];
@@ -109,16 +122,29 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       const scope = it.kind === 'plugin' ? ` (${pluginScope})` : '';
       lines.push(`Install ${it.name}${scope}`);
     }
-    return <ConfirmSummary lines={lines} />;
+    body = <ConfirmSummary lines={lines} />;
+  } else if (screen === 'run') {
+    body = <ProgressLog events={events} />;
+  } else {
+    body = (
+      <Box flexDirection="column">
+        <ProgressLog events={events} />
+        {runError && (
+          <Box marginTop={1} flexDirection="column">
+            <Text color="red">Run failed: {runError}</Text>
+            <Text dimColor>See the failure event above for the stderr tail.</Text>
+          </Box>
+        )}
+        <Box marginTop={1}><PostInstallPanel events={events} /></Box>
+        <Box marginTop={1}><Text dimColor>enter to exit</Text></Box>
+      </Box>
+    );
   }
-  if (screen === 'run') {
-    return <ProgressLog events={events} />;
-  }
+
   return (
     <Box flexDirection="column">
-      <ProgressLog events={events} />
-      <Box marginTop={1}><PostInstallPanel events={events} /></Box>
-      <Box marginTop={1}><Text dimColor>enter to exit</Text></Box>
+      <Header variant={headerVariant} />
+      {body}
     </Box>
   );
 }

@@ -1,4 +1,4 @@
-import type { CatalogItem, EngineEvent, InstallPlan, PostInstallAction } from '../types.js';
+import type { CatalogItem, DeferredInteractive, EngineEvent, InstallPlan, PostInstallAction } from '../types.js';
 import { orderForInstall, orderForUninstall } from './ordering.js';
 
 export interface RichRunResult { exitCode: number; stdout: string; stderr: string }
@@ -10,6 +10,8 @@ export interface ExecuteOptions {
   dryRun: boolean;
   /** Called for each command in dryRun mode. */
   record?: (cmd: string) => void;
+  /** Collects interactive post-install actions to run after the wizard exits. */
+  deferred?: DeferredInteractive[];
 }
 
 function resolveCwd(item: CatalogItem, plan: InstallPlan): string | undefined {
@@ -97,6 +99,15 @@ async function runPostInstall(
 
   // shell
   const label = action.label ?? action.value;
+
+  // Interactive shell actions can't run while Ink owns the TTY — defer them.
+  if (action.interactive && opts.deferred && !opts.dryRun) {
+    const cwd = postCwd(item, plan);
+    opts.deferred.push({ itemId: item.id, itemName: item.name, label, command: action.value, cwd });
+    opts.onEvent({ type: 'post-shell-deferred', itemId: item.id, label });
+    return;
+  }
+
   opts.onEvent({ type: 'post-shell-start', itemId: item.id, label });
   if (opts.dryRun) {
     opts.record?.(action.value);
