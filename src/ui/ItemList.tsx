@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import type { Catalog, CatalogGroup, CatalogItem, InstallState } from '../types.js';
+import { isShellItem } from '../types.js';
 import { COLORS, GLYPHS } from './theme.js';
 
 export interface ItemListProps {
@@ -25,7 +26,7 @@ function visualsFor(it: CatalogItem, group: CatalogGroup, isSelected: boolean, i
   const onGlyph  = bracketed ? GLYPHS.ok       : GLYPHS.radioOn;
   const offGlyph = bracketed ? ' '             : GLYPHS.radioOff;
 
-  const locked = installed && !it.uninstall;
+  const locked = installed && !(isShellItem(it) && it.uninstall);
   if (locked) {
     return {
       glyph: GLYPHS.locked, badge: ` ${GLYPHS.ok} installed (locked — no uninstaller)`,

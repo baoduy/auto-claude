@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { detectStates } from '../../src/engine/detect.js';
-import type { CatalogItem } from '../../src/types.js';
+import type { CatalogItem, ToolItem } from '../../src/types.js';
 
-const item = (over: Partial<CatalogItem> = {}): CatalogItem => ({
+const item = (over: Partial<ToolItem> = {}): CatalogItem => ({
   id: 'rtk', name: 'rtk', description: '', kind: 'tool', defaultScope: 'global',
   detect: { command: 'rtk --version' },
   install: { command: 'npm i -g rtk' },

@@ -15,6 +15,7 @@ export async function detectStates(
   run: ShellRunner = realShellRunner,
 ): Promise<InstallState[]> {
   return Promise.all(items.map(async (item) => {
+    if (item.kind === 'mcp') throw new Error('todo');
     try {
       const r = await run(item.detect.command);
       if (r.exitCode !== 0) return { itemId: item.id, installed: false };

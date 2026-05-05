@@ -1,5 +1,5 @@
 export type Scope = 'global' | 'project';
-export type ItemKind = 'tool' | 'plugin';
+export type ItemKind = 'tool' | 'plugin' | 'mcp';
 export type Cwd = 'repo-root' | 'cwd';
 
 export interface PostInstallAction {
@@ -22,20 +22,56 @@ export interface DetectSpec {
   versionMatch?: string;
 }
 
-export interface CatalogItem {
+export interface McpServerConfig {
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+}
+
+interface BaseCatalogItem {
   id: string;
   name: string;
   description: string;
-  kind: ItemKind;
   homepage?: string;
+  /** When true, included by `auto-claude default` (silent fleet install). */
+  default?: boolean;
+}
+
+export interface ToolItem extends BaseCatalogItem {
+  kind: 'tool';
   defaultScope: Scope;
   detect: DetectSpec;
   install: CommandSpec;
   uninstall?: CommandSpec;
   update?: CommandSpec;
   postInstall?: PostInstallAction[];
-  /** When true, included by `auto-claude default` (silent fleet install). */
-  default?: boolean;
+}
+
+export interface PluginItem extends BaseCatalogItem {
+  kind: 'plugin';
+  defaultScope: Scope;
+  detect: DetectSpec;
+  install: CommandSpec;
+  uninstall?: CommandSpec;
+  update?: CommandSpec;
+  postInstall?: PostInstallAction[];
+}
+
+export interface McpItem extends BaseCatalogItem {
+  kind: 'mcp';
+  /** Key under which the server is written into .mcp.json's mcpServers. */
+  mcpKey: string;
+  mcpServer: McpServerConfig;
+}
+
+export type CatalogItem = ToolItem | PluginItem | McpItem;
+
+export function isMcpItem(item: CatalogItem): item is McpItem {
+  return item.kind === 'mcp';
+}
+
+export function isShellItem(item: CatalogItem): item is ToolItem | PluginItem {
+  return item.kind === 'tool' || item.kind === 'plugin';
 }
 
 export type GroupKind = 'pick-one' | 'pick-many';

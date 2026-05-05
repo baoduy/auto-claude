@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import type { Catalog, CatalogGroup, CatalogItem, EngineEvent, InstallPlan, InstallState, Scope } from '../types.js';
+import { isShellItem } from '../types.js';
 import { ItemList } from './ItemList.js';
 import { PluginScopePrompt } from './PluginScopePrompt.js';
 import { ConfirmSummary } from './ConfirmSummary.js';
@@ -65,7 +66,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
   const userUninstallIds = [...effectiveInstalled].filter((id) => {
     if (selected.has(id)) return false;
     const it = items.find((i) => i.id === id);
-    return !!it?.uninstall;
+    return !!it && isShellItem(it) && !!it.uninstall;
   });
   const autoSwapIds = useMemo(() => {
     const out: string[] = [];
@@ -74,7 +75,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       if (!g || g.kind !== 'pick-one') continue;
       for (const sib of g.items) {
         if (sib.id === newId) continue;
-        if (effectiveInstalled.has(sib.id) && !selected.has(sib.id) && sib.uninstall) {
+        if (effectiveInstalled.has(sib.id) && !selected.has(sib.id) && isShellItem(sib) && sib.uninstall) {
           out.push(sib.id);
         }
       }
@@ -124,7 +125,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       else if (key.downArrow) setCursor((c) => Math.min(items.length - 1, c + 1));
       else if (input === ' ') {
         const it = items[cursor]!;
-        if (effectiveInstalled.has(it.id) && !it.uninstall) return;
+        if (effectiveInstalled.has(it.id) && !(isShellItem(it) && it.uninstall)) return;
         const group = groupOf.get(it.id);
         setSelected((s) => {
           const next = new Set(s);

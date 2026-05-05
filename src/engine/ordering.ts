@@ -1,11 +1,13 @@
 import type { CatalogItem } from '../types.js';
+import { isShellItem } from '../types.js';
 
 function isRepoAware(item: CatalogItem): boolean {
+  if (!isShellItem(item)) return false;
   return (item.postInstall ?? []).some((p) => p.requiresRepo)
       || item.install.cwd === 'repo-root';
 }
 
-/** Order: global tools → repo-aware tools → plugins. Inner order preserved. */
+/** Order: global tools/mcp → repo-aware tools → plugins. Inner order preserved. */
 export function orderForInstall(items: CatalogItem[]): CatalogItem[] {
   const globalTools: CatalogItem[] = [];
   const repoTools: CatalogItem[] = [];
