@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderDefaultList, runDefaultInstall } from '../../src/commands/default.js';
-import type { CatalogItem, InstallState } from '../../src/types.js';
+import type { CatalogItem, InstallState, Catalog } from '../../src/types.js';
 import type { EngineEvent } from '../../src/types.js';
 
 const items: CatalogItem[] = [
@@ -112,19 +112,49 @@ describe('runDefaultInstall', () => {
 });
 
 describe('renderDefaultList', () => {
-  it('groups by kind and shows install state', () => {
-    const out = renderDefaultList(items.filter((i) => i.default === true), states);
-    expect(out).toMatch(/Default tools:/);
-    expect(out).toMatch(/Default plugins:/);
+  it('groups by catalog group and shows install state', () => {
+    const catalog: Catalog = {
+      version: 2,
+      updatedAt: '2026-05-05',
+      groups: [
+        {
+          id: 'core',
+          name: 'Core Tools',
+          kind: 'pick-many',
+          items: items.filter((i) => i.default === true),
+        },
+      ],
+    };
+    const out = renderDefaultList(catalog, states);
+    expect(out).toMatch(/Core Tools:/);
     expect(out).toMatch(/rtk\s+\S*\s*installed/);
     expect(out).toMatch(/cm\s+\S*\s*not installed/);
     expect(out).not.toContain('nope');
   });
 
-  it('omits a section when its kind has no defaults', () => {
-    const onlyTools = items.filter((i) => i.default === true && i.kind === 'tool');
-    const out = renderDefaultList(onlyTools, [{ itemId: 'rtk', installed: true }]);
-    expect(out).toContain('Default tools:');
-    expect(out).not.toContain('Default plugins:');
+  it('omits groups with no default items', () => {
+    const rtk: CatalogItem = items[0]!;
+    const nope: CatalogItem = items[2]!;
+    const catalog: Catalog = {
+      version: 2,
+      updatedAt: '2026-05-05',
+      groups: [
+        {
+          id: 'memory',
+          name: 'Memory',
+          kind: 'pick-one',
+          items: [rtk],
+        },
+        {
+          id: 'other',
+          name: 'Other',
+          kind: 'pick-many',
+          items: [nope],
+        },
+      ],
+    };
+    const out = renderDefaultList(catalog, [{ itemId: 'rtk', installed: true }]);
+    expect(out).toContain('Memory:');
+    expect(out).not.toContain('Other:');
   });
 });
