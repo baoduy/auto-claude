@@ -9,6 +9,7 @@
       "kind": "plugin",
       "homepage": "https://github.com/thedotmack/claude-mem",
       "defaultScope": "global",
+      "default": true,
       "detect": { "command": "claude plugin list", "versionMatch": "claude-mem" },
       "install":   { "command": "claude plugin install claude-mem@thedotmack" },
       "uninstall": { "command": "claude plugin uninstall claude-mem" }
@@ -20,6 +21,7 @@
       "kind": "tool",
       "homepage": "https://github.com/rtk-ai/rtk",
       "defaultScope": "global",
+      "default": true,
       "detect": { "command": "rtk --version" },
       "install":   { "command": "brew install rtk" },
       "uninstall": { "command": "brew uninstall rtk" },
@@ -48,6 +50,7 @@
       "kind": "tool",
       "homepage": "https://github.com/abhigyanpatwari/GitNexus",
       "defaultScope": "project",
+      "default": true,
       "detect": { "command": "gitnexus --version" },
       "install":   { "command": "npm install -g gitnexus" },
       "uninstall": { "command": "npm uninstall -g gitnexus" },
@@ -63,6 +66,7 @@
       "description": "Claude Code plugin: skills framework",
       "kind": "plugin",
       "defaultScope": "global",
+      "default": true,
       "detect": { "command": "claude plugin list", "versionMatch": "superpowers" },
       "install":   { "command": "claude plugin install superpowers@claude-plugins-official" },
       "uninstall": { "command": "claude plugin uninstall superpowers" }
@@ -73,6 +77,7 @@
       "description": "Claude Code plugin: automation recommender",
       "kind": "plugin",
       "defaultScope": "global",
+      "default": true,
       "detect": { "command": "claude plugin list", "versionMatch": "claude-code-setup" },
       "install":   { "command": "claude plugin install claude-code-setup@claude-plugins-official" },
       "uninstall": { "command": "claude plugin uninstall claude-code-setup" },
@@ -87,6 +92,7 @@
       "description": "Official Microsoft / Azure / .NET documentation, API references, and code samples",
       "kind": "plugin",
       "defaultScope": "global",
+      "default": true,
       "detect": { "command": "claude plugin list", "versionMatch": "microsoft-docs" },
       "install":   { "command": "claude plugin install microsoft-docs@claude-plugins-official" },
       "uninstall": { "command": "claude plugin uninstall microsoft-docs" }
@@ -97,6 +103,7 @@
       "description": "Upstash Context7 — version-specific library docs and examples pulled into LLM context",
       "kind": "plugin",
       "defaultScope": "global",
+      "default": true,
       "detect": { "command": "claude plugin list", "versionMatch": "context7" },
       "install":   { "command": "claude plugin install context7@claude-plugins-official" },
       "uninstall": { "command": "claude plugin uninstall context7" }
@@ -155,6 +162,7 @@
       "kind": "tool",
       "homepage": "https://github.com/rixinhahaha/snip",
       "defaultScope": "global",
+      "default": true,
       "detect":    { "command": "snip --help" },
       "install":   { "command": "brew install --cask rixinhahaha/snip/snip" },
       "uninstall": { "command": "brew uninstall --cask snip" },
