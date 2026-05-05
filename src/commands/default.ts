@@ -3,6 +3,8 @@ import { detectStates, realShellRunner } from '../engine/detect.js';
 import { loadCatalog, defaultDeps } from '../catalog/loader.js';
 import { executeInstall } from '../engine/executor.js';
 import { orderForInstall } from '../engine/ordering.js';
+import { printHeader } from '../ui/Header.js';
+import { GLYPHS, paint } from '../ui/theme.js';
 
 export interface RunDefaultListOptions {
   refreshCatalog?: boolean;
@@ -19,6 +21,7 @@ export async function runDefaultList(opts: RunDefaultListOptions = {}): Promise<
   }
   const defaults = catalog.items.filter((i) => i.default === true);
   const states = await detectStates(defaults);
+  process.stdout.write(printHeader('default --list'));
   process.stdout.write(renderDefaultList(defaults, states));
 }
 
@@ -29,12 +32,12 @@ export function renderDefaultList(items: CatalogItem[], states: InstallState[]):
 
   const lines: string[] = [];
   if (tools.length > 0) {
-    lines.push('Default tools:');
+    lines.push(paint('Default tools:', 'brand'));
     for (const it of tools) lines.push(formatRow(it, stateById.get(it.id)));
     lines.push('');
   }
   if (plugins.length > 0) {
-    lines.push('Default plugins:');
+    lines.push(paint('Default plugins:', 'brand'));
     for (const it of plugins) lines.push(formatRow(it, stateById.get(it.id)));
     lines.push('');
   }
@@ -43,11 +46,17 @@ export function renderDefaultList(items: CatalogItem[], states: InstallState[]):
 }
 
 function formatRow(item: CatalogItem, state: InstallState | undefined): string {
-  const status = state?.installed ? 'installed' : 'not installed';
+  const installed = !!state?.installed;
+  const status = installed
+    ? paint(`${GLYPHS.ok} installed`, 'ok')
+    : paint(`${GLYPHS.missing} not installed`, 'dim');
+  const kindGlyph = item.kind === 'tool'
+    ? paint(GLYPHS.tool, 'tool')
+    : paint(GLYPHS.plugin, 'plugin');
   const sep = process.stdout.isTTY ? '  ' : '\t';
   // Pad id to 14 chars only when TTY, for clean alignment.
   const id = process.stdout.isTTY ? item.id.padEnd(14) : item.id;
-  return `  ${id}${sep}${status}`;
+  return `  ${kindGlyph} ${id}${sep}${status}`;
 }
 
 export interface RunDefaultInstallDeps {
@@ -78,18 +87,18 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
 
   for (const item of ordered) {
     if (installedIds.has(item.id)) {
-      deps.log(`↺ ${item.id} already installed`);
+      deps.log(paint(`${GLYPHS.recycle} ${item.id} already installed`, 'dim'));
       result.skipped++;
       result.ok++;
       continue;
     }
 
-    deps.log(`→ ${item.id}`);
+    deps.log(paint(`${GLYPHS.arrow} ${item.id}`, 'cursor'));
 
     // Wrap onEvent so post-prompt becomes a one-line notice (no human to read prompts on a fleet device).
     const wrappedOnEvent = (e: EngineEvent) => {
       if (e.type === 'post-prompt') {
-        deps.log(`ⓘ ${e.itemId}: post-install Claude prompt skipped (run \`auto-claude\` interactively to see it)`);
+        deps.log(paint(`${GLYPHS.info} ${e.itemId}: post-install Claude prompt skipped (run \`auto-claude\` interactively to see it)`, 'info'));
         return;
       }
       deps.onEvent(e);
@@ -104,15 +113,16 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
           dryRun: false,
         },
       );
-      deps.log(`✓ ${item.id}`);
+      deps.log(paint(`${GLYPHS.ok} ${item.id}`, 'ok'));
       result.ok++;
     } catch (e) {
-      deps.err(`✗ ${item.id}: ${(e as Error).message}`);
+      deps.err(paint(`${GLYPHS.fail} ${item.id}: ${(e as Error).message}`, 'fail'));
       result.failed++;
     }
   }
 
-  deps.log(`default: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped`);
+  const summaryColor = result.failed > 0 ? 'fail' : 'ok';
+  deps.log(paint(`default: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped`, summaryColor));
   return result;
 }
 
@@ -131,6 +141,8 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
   }
 
   const defaults = catalog.items.filter((i) => i.default === true);
+
+  process.stdout.write(printHeader('default'));
 
   const richRun: RunDefaultInstallDeps['run'] = async (cmd) => {
     return realShellRunner(cmd);
