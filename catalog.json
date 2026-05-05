@@ -92,7 +92,7 @@
       "description": "Official Microsoft / Azure / .NET documentation, API references, and code samples",
       "kind": "plugin",
       "defaultScope": "global",
-      "default": true,
+      "default": false,
       "detect": { "command": "claude plugin list", "versionMatch": "microsoft-docs" },
       "install":   { "command": "claude plugin install microsoft-docs@claude-plugins-official" },
       "uninstall": { "command": "claude plugin uninstall microsoft-docs" }
@@ -103,7 +103,7 @@
       "description": "Upstash Context7 — version-specific library docs and examples pulled into LLM context",
       "kind": "plugin",
       "defaultScope": "global",
-      "default": true,
+      "default": false,
       "detect": { "command": "claude plugin list", "versionMatch": "context7" },
       "install":   { "command": "claude plugin install context7@claude-plugins-official" },
       "uninstall": { "command": "claude plugin uninstall context7" }
@@ -143,6 +143,7 @@
     {
       "id": "context-mode",
       "name": "context-mode",
+      "default": true,
       "description": "MCP server that sandboxes tool output and indexes session events — ~98% context reduction",
       "kind": "tool",
       "homepage": "https://github.com/mksglu/context-mode",

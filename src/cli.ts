@@ -32,7 +32,7 @@ program.command('update')
 program.command('default')
   .description('Silently install all catalog items flagged default: true (global scope, non-interactive)')
   .option('--refresh-catalog', 'force re-fetch catalog')
-  .option('-l, --list', 'list default items and their installed state, then exit')
+  .option('-ls, --list', 'list default items and their installed state, then exit')
   .action(async (opts) => {
     if (opts.list) {
       await runDefaultList({ refreshCatalog: !!opts.refreshCatalog });
