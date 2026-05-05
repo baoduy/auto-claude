@@ -27,6 +27,26 @@ const catalog: Catalog = {
   ],
 };
 
+describe('mcp item visuals', () => {
+  it('renders an mcp item with the green ⚡ glyph', () => {
+    const mcpCatalog: Catalog = {
+      version: 2,
+      updatedAt: '2026-05-05',
+      groups: [{
+        id: 'mcp-servers', name: 'MCP servers', kind: 'pick-many' as const,
+        items: [{
+          id: 'foo-mcp', name: 'Foo', description: '', kind: 'mcp' as const,
+          mcpKey: 'foo', mcpServer: { command: 'x' },
+        }],
+      }],
+    };
+    const { lastFrame } = render(
+      <ItemList catalog={mcpCatalog} states={[]} selected={new Set()} cursor={0} />
+    );
+    expect(lastFrame()).toContain('⚡');
+  });
+});
+
 describe('ItemList grouped layout', () => {
   it('shows group headers', () => {
     const { lastFrame } = render(

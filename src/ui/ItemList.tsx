@@ -68,8 +68,8 @@ export function ItemList({ catalog, states, selected, cursor }: ItemListProps): 
     const installed = !!byId.get(it.id)?.installed;
     const v = visualsFor(it, group, isSelected, installed, isCursor);
     const cursorGlyph = isCursor ? `${GLYPHS.cursor} ` : '  ';
-    const kindGlyph = it.kind === 'tool' ? GLYPHS.tool : GLYPHS.plugin;
-    const kindColor = it.kind === 'tool' ? COLORS.tool : COLORS.plugin;
+    const kindGlyph = it.kind === 'tool' ? GLYPHS.tool : it.kind === 'mcp' ? GLYPHS.mcp : GLYPHS.plugin;
+    const kindColor = it.kind === 'tool' ? COLORS.tool : it.kind === 'mcp' ? COLORS.mcp : COLORS.plugin;
     const open  = v.bracketed ? '[' : '(';
     const close = v.bracketed ? ']' : ')';
 

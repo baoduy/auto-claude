@@ -20,7 +20,9 @@ export function renderStatus(catalog: import('../types.js').Catalog, states: Ins
         : paint(`${GLYPHS.missing} missing  `, 'dim');
       const kindGlyph = item.kind === 'tool'
         ? paint(GLYPHS.tool, 'tool')
-        : paint(GLYPHS.plugin, 'plugin');
+        : item.kind === 'mcp'
+          ? paint(GLYPHS.mcp, 'mcp')
+          : paint(GLYPHS.plugin, 'plugin');
       const ver = s?.version ? paint(`  (${s.version})`, 'dim') : '';
       lines.push(`  ${badge}  ${kindGlyph} ${item.kind.padEnd(7)}  ${item.name}${ver}`);
     }
