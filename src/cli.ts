@@ -3,6 +3,7 @@ import { runInstall } from './commands/install.js';
 import { runStatus } from './commands/status.js';
 import { runRemove } from './commands/remove.js';
 import { runUpdate } from './commands/update.js';
+import { runDefault, runDefaultList } from './commands/default.js';
 
 const program = new Command();
 
@@ -27,6 +28,18 @@ program.command('update')
   .description('Update installed items')
   .option('--only <id>', 'update only the given item')
   .action(async (opts) => { await runUpdate({ only: opts.only }); });
+
+program.command('default')
+  .description('Silently install all catalog items flagged default: true (global scope, non-interactive)')
+  .option('--refresh-catalog', 'force re-fetch catalog')
+  .option('-l, --list', 'list default items and their installed state, then exit')
+  .action(async (opts) => {
+    if (opts.list) {
+      await runDefaultList({ refreshCatalog: !!opts.refreshCatalog });
+    } else {
+      await runDefault({ refreshCatalog: !!opts.refreshCatalog });
+    }
+  });
 
 program.parseAsync(process.argv).catch((err) => {
   console.error(err.message ?? err);
