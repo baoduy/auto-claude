@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "updatedAt": "2026-05-05",
+  "items": [
+    {
+      "id": "claude-mem",
+      "name": "claude-mem",
+      "description": "Persistent cross-session memory for Claude Code",
+      "kind": "plugin",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "claude-mem" },
+      "install":   { "command": "claude plugin install claude-mem@thedotmack" },
+      "uninstall": { "command": "claude plugin uninstall claude-mem" }
+    },
+    {
+      "id": "rtk",
+      "name": "rtk",
+      "description": "Rust Token Killer — token-optimized CLI proxy",
+      "kind": "tool",
+      "defaultScope": "global",
+      "detect": { "command": "rtk --version" },
+      "install":   { "command": "brew install rtk" },
+      "uninstall": { "command": "brew uninstall rtk" },
+      "update":    { "command": "brew upgrade rtk" },
+      "postInstall": [
+        { "type": "shell", "value": "rtk init -g", "requiresRepo": true, "label": "Initializing rtk in repo" }
+      ]
+    },
+    {
+      "id": "superpowers",
+      "name": "superpowers",
+      "description": "Claude Code plugin: skills framework",
+      "kind": "plugin",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "superpowers" },
+      "install":   { "command": "claude plugin install superpowers@claude-plugins-official" },
+      "uninstall": { "command": "claude plugin uninstall superpowers" }
+    },
+    {
+      "id": "claude-code-setup",
+      "name": "claude-code-setup",
+      "description": "Claude Code plugin: automation recommender",
+      "kind": "plugin",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "claude-code-setup" },
+      "install":   { "command": "claude plugin install claude-code-setup@claude-plugins-official" },
+      "uninstall": { "command": "claude plugin uninstall claude-code-setup" },
+      "postInstall": [
+        { "type": "claude-prompt", "label": "Trigger automation recommender",
+          "value": "Ask Claude in this repo: \"recommend automations for this project\"" }
+      ]
+    }
+  ]
+}
