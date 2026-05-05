@@ -160,7 +160,7 @@
       "uninstall": { "command": "brew uninstall --cask snip" },
       "update":    { "command": "brew upgrade --cask snip" },
       "postInstall": [
-        { "type": "shell", "value": "snip setup", "label": "Wiring Snip into Claude Code" }
+        { "type": "shell", "value": "snip setup", "label": "Wiring Snip into Claude Code", "interactive": true }
       ]
     },
     {
