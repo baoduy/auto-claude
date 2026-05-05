@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CatalogSchema } from '../../src/catalog/schema.js';
+import { CatalogSchema, CatalogItemSchema } from '../../src/catalog/schema.js';
 
 describe('CatalogSchema', () => {
   const valid = {
@@ -39,5 +39,30 @@ describe('CatalogSchema', () => {
       }],
     };
     expect(() => CatalogSchema.parse(ok)).not.toThrow();
+  });
+});
+
+describe('CatalogItemSchema default field', () => {
+  const base = {
+    id: 'x', name: 'x', description: '', kind: 'tool',
+    defaultScope: 'global',
+    detect: { command: 'x -v' },
+    install: { command: 'echo' },
+  };
+
+  it('accepts default: true', () => {
+    expect(() => CatalogItemSchema.parse({ ...base, default: true })).not.toThrow();
+  });
+
+  it('accepts default: false', () => {
+    expect(() => CatalogItemSchema.parse({ ...base, default: false })).not.toThrow();
+  });
+
+  it('accepts items without a default field', () => {
+    expect(() => CatalogItemSchema.parse(base)).not.toThrow();
+  });
+
+  it('rejects default as a string', () => {
+    expect(() => CatalogItemSchema.parse({ ...base, default: 'true' })).toThrow();
   });
 });
