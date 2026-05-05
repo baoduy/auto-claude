@@ -103,7 +103,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     exit();
   }, [screen, runError, hasPrompt, onComplete, exit]);
 
-  const headerVariant: 'splash' | 'compact' = screen === 'select' ? 'splash' : 'compact';
+  const headerVariant: 'splash' | 'compact' = 'splash';
 
   let body: React.JSX.Element;
   if (screen === 'select') {
