@@ -9,7 +9,7 @@ export interface ItemListProps {
   cursor: number;
 }
 
-export function ItemList({ items, states, selected, cursor }: ItemListProps): JSX.Element {
+export function ItemList({ items, states, selected, cursor }: ItemListProps): React.JSX.Element {
   const byId = new Map(states.map((s) => [s.itemId, s]));
   const tools = items.filter((i) => i.kind === 'tool');
   const plugins = items.filter((i) => i.kind === 'plugin');
@@ -20,10 +20,26 @@ export function ItemList({ items, states, selected, cursor }: ItemListProps): JS
     const isCursor = idx === cursor;
     const isSelected = selected.has(it.id);
     const installed = byId.get(it.id)?.installed;
-    const checkbox = isSelected || installed ? '[✓]' : '[ ]';
-    const badge = installed ? ' ✓ installed' : '';
+    const locked = installed && !it.uninstall;
+    let checkbox: string;
+    let badge = '';
+    if (locked) {
+      checkbox = '[■]';
+      badge = ' ✓ installed (locked — no uninstaller)';
+    } else if (installed && isSelected) {
+      checkbox = '[✓]';
+      badge = ' ✓ installed';
+    } else if (installed && !isSelected) {
+      checkbox = '[ ]';
+      badge = ' ⚠ will uninstall';
+    } else if (isSelected) {
+      checkbox = '[✓]';
+    } else {
+      checkbox = '[ ]';
+    }
+    const color = isCursor ? 'cyan' : installed && !isSelected ? 'yellow' : undefined;
     return (
-      <Text key={it.id} color={isCursor ? 'cyan' : undefined}>
+      <Text key={it.id} color={color} dimColor={!!locked && !isCursor}>
         {isCursor ? '> ' : '  '}{checkbox} {it.name.padEnd(20)} {it.description}{badge}
       </Text>
     );
@@ -35,8 +51,9 @@ export function ItemList({ items, states, selected, cursor }: ItemListProps): JS
       {tools.map(renderItem)}
       <Box marginTop={1}><Text bold>Plugins</Text></Box>
       {plugins.map(renderItem)}
-      <Box marginTop={1}>
+      <Box marginTop={1} flexDirection="column">
         <Text dimColor>↑↓ navigate · space toggle · enter continue · q quit</Text>
+        <Text dimColor>uncheck an installed item to uninstall it · [■] = no uninstaller available</Text>
       </Box>
     </Box>
   );

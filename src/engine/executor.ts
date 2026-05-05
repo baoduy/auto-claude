@@ -1,5 +1,5 @@
 import type { CatalogItem, EngineEvent, InstallPlan, PostInstallAction } from '../types.js';
-import { orderForInstall } from './ordering.js';
+import { orderForInstall, orderForUninstall } from './ordering.js';
 
 export interface RichRunResult { exitCode: number; stdout: string; stderr: string }
 export type RichRunner = (cmd: string, opts?: { cwd?: string }) => Promise<RichRunResult>;
@@ -29,13 +29,39 @@ function tailStderr(s: string): string {
 }
 
 export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): Promise<void> {
-  const items = orderForInstall(plan.selected);
-  const total = items.length;
+  const uninstalls = orderForUninstall((plan.uninstall ?? []).filter((i) => i.uninstall));
+  const installs = orderForInstall(plan.selected);
+  const total = uninstalls.length + installs.length;
+  let stepIndex = 0;
 
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i]!;
+  // Phase 1: uninstall unchecked items (skip those without an uninstall command — locked in UI)
+  for (const item of uninstalls) {
+    stepIndex++;
     const cwd = resolveCwd(item, plan);
-    opts.onEvent({ type: 'item-start', itemId: item.id, label: item.name, index: i + 1, total });
+    opts.onEvent({
+      type: 'item-start', itemId: item.id, label: `Uninstall ${item.name}`,
+      index: stepIndex, total, phase: 'uninstall',
+    });
+    if (opts.dryRun) {
+      opts.record?.(item.uninstall!.command);
+    } else {
+      const r = await opts.run(item.uninstall!.command, cwd ? { cwd } : undefined);
+      if (r.exitCode !== 0) {
+        opts.onEvent({ type: 'item-failure', itemId: item.id, exitCode: r.exitCode, stderrTail: tailStderr(r.stderr) });
+        throw new Error(`Uninstall failed for ${item.id} (exit ${r.exitCode})`);
+      }
+    }
+    opts.onEvent({ type: 'item-success', itemId: item.id });
+  }
+
+  // Phase 2: install newly selected items
+  for (const item of installs) {
+    stepIndex++;
+    const cwd = resolveCwd(item, plan);
+    opts.onEvent({
+      type: 'item-start', itemId: item.id, label: item.name,
+      index: stepIndex, total, phase: 'install',
+    });
 
     if (opts.dryRun) {
       opts.record?.(item.install.command);

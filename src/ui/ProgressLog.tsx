@@ -39,7 +39,7 @@ function reduce(events: EngineEvent[]): Line[] {
   return lines;
 }
 
-export function ProgressLog({ events }: { events: EngineEvent[] }): JSX.Element {
+export function ProgressLog({ events }: { events: EngineEvent[] }): React.JSX.Element {
   const lines = reduce(events);
   return (
     <Box flexDirection="column">

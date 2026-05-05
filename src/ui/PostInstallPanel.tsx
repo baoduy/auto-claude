@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import type { EngineEvent } from '../types.js';
 
-export function PostInstallPanel({ events }: { events: EngineEvent[] }): JSX.Element {
+export function PostInstallPanel({ events }: { events: EngineEvent[] }): React.JSX.Element {
   const prompts = events.filter((e): e is Extract<EngineEvent, { type: 'post-prompt' }> => e.type === 'post-prompt');
   const done = events.some((e) => e.type === 'done');
   return (
