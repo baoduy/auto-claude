@@ -94,6 +94,31 @@ describe('<App>', () => {
     expect((received as InstallPlan | null)?.selected.map((i: CatalogItem) => i.id)).toEqual(['b']);
   });
 
+  it('omits mcp items from the wizard when repoRoot is null', () => {
+    const mcpCatalog: Catalog = {
+      version: 2 as const,
+      updatedAt: '2026-05-05',
+      groups: [{
+        id: 'mcp-servers', name: 'MCP servers (project)', kind: 'pick-many' as const,
+        items: [{
+          id: 'foo-mcp', name: 'Foo', description: '', kind: 'mcp' as const,
+          mcpKey: 'foo', mcpServer: { command: 'x' },
+        }],
+      }],
+    };
+    const { lastFrame } = render(
+      <App
+        catalog={mcpCatalog}
+        initialStates={[]}
+        repoRoot={null}
+        runInstall={async () => {}}
+        onComplete={() => {}}
+      />
+    );
+    expect(lastFrame()).not.toContain('foo-mcp');
+    expect(lastFrame()).toContain('MCP items require a project');
+  });
+
   it('auto-swap: selecting B in same group when A is installed queues A for uninstall', async () => {
     const catalog: Catalog = {
       version: 2, updatedAt: '2026-05-05',

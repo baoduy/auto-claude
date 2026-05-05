@@ -1,6 +1,7 @@
 import type { CatalogItem, EngineEvent, InstallState } from '../types.js';
 import { detectStates, realShellRunner } from '../engine/detect.js';
 import { loadCatalog, defaultDeps } from '../catalog/loader.js';
+import { findRepoRoot } from '../engine/project.js';
 import { executeInstall } from '../engine/executor.js';
 import { orderForInstall } from '../engine/ordering.js';
 import { printHeader } from '../ui/Header.js';
@@ -21,7 +22,8 @@ export async function runDefaultList(opts: RunDefaultListOptions = {}): Promise<
     return;
   }
   const defaults = flattenItems(catalog).filter((i) => i.default === true);
-  const states = await detectStates(defaults);
+  const repoRoot = await findRepoRoot();
+  const states = await detectStates(defaults, undefined, repoRoot);
   process.stdout.write(printHeader('default --list'));
   process.stdout.write(renderDefaultList(catalog, states));
 }
@@ -35,7 +37,7 @@ export function renderDefaultList(catalog: import('../types.js').Catalog, states
     if (defaults.length === 0) continue;
     any = true;
     if (lines.length > 0) lines.push('');
-    lines.push(paint(`${g.name}:`, 'brand'));
+    lines.push(paint(`${g.name}:`, 'group'));
     for (const it of defaults) lines.push(formatRow(it, stateById.get(it.id)));
   }
   if (!any) lines.push('No items are flagged as defaults.');
@@ -49,7 +51,9 @@ function formatRow(item: CatalogItem, state: InstallState | undefined): string {
     : paint(`${GLYPHS.missing} not installed`, 'dim');
   const kindGlyph = item.kind === 'tool'
     ? paint(GLYPHS.tool, 'tool')
-    : paint(GLYPHS.plugin, 'plugin');
+    : item.kind === 'mcp'
+      ? paint(GLYPHS.mcp, 'mcp')
+      : paint(GLYPHS.plugin, 'plugin');
   const sep = process.stdout.isTTY ? '  ' : '\t';
   // Pad id to 14 chars only when TTY, for clean alignment.
   const id = process.stdout.isTTY ? item.id.padEnd(14) : item.id;
@@ -58,6 +62,7 @@ function formatRow(item: CatalogItem, state: InstallState | undefined): string {
 
 export interface RunDefaultInstallDeps {
   items: CatalogItem[];
+  repoRoot?: string | null;
   detect: (items: CatalogItem[]) => Promise<InstallState[]>;
   run: (cmd: string, opts?: { cwd?: string }) => Promise<{ exitCode: number; stdout: string; stderr: string }>;
   log: (msg: string) => void;
@@ -83,6 +88,11 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
   const installedIds = new Set(states.filter((s) => s.installed).map((s) => s.itemId));
 
   for (const item of ordered) {
+    if (item.kind === 'mcp' && !deps.repoRoot) {
+      deps.log(paint(`${GLYPHS.info} ${item.id}: skipped (MCP items require a project repo)`, 'dim'));
+      result.skipped++;
+      continue;
+    }
     if (installedIds.has(item.id)) {
       deps.log(paint(`${GLYPHS.recycle} ${item.id} already installed`, 'dim'));
       result.skipped++;
@@ -141,13 +151,16 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
 
   process.stdout.write(printHeader('default'));
 
+  const repoRoot = await findRepoRoot();
+
   const richRun: RunDefaultInstallDeps['run'] = async (cmd) => {
     return realShellRunner(cmd);
   };
 
   const result = await runDefaultInstall({
     items: defaults,
-    detect: detectStates,
+    repoRoot,
+    detect: (items) => detectStates(items, undefined, repoRoot),
     run: richRun,
     log: (m) => process.stdout.write(m + '\n'),
     err: (m) => process.stderr.write(m + '\n'),

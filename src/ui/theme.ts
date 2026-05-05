@@ -8,10 +8,12 @@ export const COLORS = {
   brand: '#D97706', // orange
   tool: 'cyan',
   plugin: 'magenta',
+  mcp: 'green',
   ok: 'green',
   fail: 'red',
   warn: 'yellow',
   info: 'blue',
+  group: 'blue',
   cursor: 'cyan',
 } as const;
 
@@ -19,6 +21,7 @@ export const GLYPHS = {
   // kinds
   tool: '⚙',
   plugin: '◆',
+  mcp: '⚡',
   // status / actions
   ok: '✓',
   fail: '✗',
@@ -48,10 +51,12 @@ export type PaintColor =
   | 'brand'
   | 'tool'
   | 'plugin'
+  | 'mcp'
   | 'ok'
   | 'fail'
   | 'warn'
   | 'info'
+  | 'group'
   | 'cursor'
   | 'dim'
   | 'bold';
@@ -60,10 +65,12 @@ const ANSI: Record<PaintColor, string> = {
   brand: '\x1b[38;2;217;119;6m', // truecolor #D97706
   tool: '\x1b[36m',
   plugin: '\x1b[35m',
+  mcp: '\x1b[32m',
   ok: '\x1b[32m',
   fail: '\x1b[31m',
   warn: '\x1b[33m',
   info: '\x1b[34m',
+  group: '\x1b[34m',
   cursor: '\x1b[36m',
   dim: '\x1b[2m',
   bold: '\x1b[1m',

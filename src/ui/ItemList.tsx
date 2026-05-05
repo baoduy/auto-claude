@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import type { Catalog, CatalogGroup, CatalogItem, InstallState } from '../types.js';
+import { isShellItem } from '../types.js';
 import { COLORS, GLYPHS } from './theme.js';
 
 export interface ItemListProps {
@@ -25,7 +26,7 @@ function visualsFor(it: CatalogItem, group: CatalogGroup, isSelected: boolean, i
   const onGlyph  = bracketed ? GLYPHS.ok       : GLYPHS.radioOn;
   const offGlyph = bracketed ? ' '             : GLYPHS.radioOff;
 
-  const locked = installed && !it.uninstall;
+  const locked = installed && !(isShellItem(it) && it.uninstall);
   if (locked) {
     return {
       glyph: GLYPHS.locked, badge: ` ${GLYPHS.ok} installed (locked — no uninstaller)`,
@@ -67,8 +68,8 @@ export function ItemList({ catalog, states, selected, cursor }: ItemListProps): 
     const installed = !!byId.get(it.id)?.installed;
     const v = visualsFor(it, group, isSelected, installed, isCursor);
     const cursorGlyph = isCursor ? `${GLYPHS.cursor} ` : '  ';
-    const kindGlyph = it.kind === 'tool' ? GLYPHS.tool : GLYPHS.plugin;
-    const kindColor = it.kind === 'tool' ? COLORS.tool : COLORS.plugin;
+    const kindGlyph = it.kind === 'tool' ? GLYPHS.tool : it.kind === 'mcp' ? GLYPHS.mcp : GLYPHS.plugin;
+    const kindColor = it.kind === 'tool' ? COLORS.tool : it.kind === 'mcp' ? COLORS.mcp : COLORS.plugin;
     const open  = v.bracketed ? '[' : '(';
     const close = v.bracketed ? ']' : ')';
 
@@ -90,7 +91,7 @@ export function ItemList({ catalog, states, selected, cursor }: ItemListProps): 
     <Box flexDirection="column">
       {catalog.groups.map((g) => (
         <Box key={g.id} flexDirection="column" marginTop={1}>
-          <Text bold color={COLORS.brand}>
+          <Text bold color={COLORS.group}>
             {g.name}
             {g.kind === 'pick-one' ? <Text dimColor> (pick one)</Text> : null}
           </Text>

@@ -1,8 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { promises as fs } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { detectStates } from '../../src/engine/detect.js';
-import type { CatalogItem } from '../../src/types.js';
+import type { CatalogItem, ToolItem } from '../../src/types.js';
 
-const item = (over: Partial<CatalogItem> = {}): CatalogItem => ({
+const item = (over: Partial<ToolItem> = {}): CatalogItem => ({
   id: 'rtk', name: 'rtk', description: '', kind: 'tool', defaultScope: 'global',
   detect: { command: 'rtk --version' },
   install: { command: 'npm i -g rtk' },
@@ -41,4 +45,34 @@ describe('detectStates', () => {
       async () => { throw new Error('ENOENT'); });
     expect(states[0]!.installed).toBe(false);
   });
+});
+
+it('detects mcp items by reading .mcp.json from repoRoot', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'mcp-detect-'));
+  try {
+    await fs.writeFile(
+      join(repo, '.mcp.json'),
+      JSON.stringify({ mcpServers: { foo: { command: 'x' } } }),
+      'utf-8',
+    );
+    const items = [{
+      id: 'foo-mcp', name: 'Foo', description: '', kind: 'mcp' as const,
+      mcpKey: 'foo', mcpServer: { command: 'x' },
+    }, {
+      id: 'bar-mcp', name: 'Bar', description: '', kind: 'mcp' as const,
+      mcpKey: 'bar', mcpServer: { command: 'y' },
+    }];
+    const states = await detectStates(items, async () => ({ exitCode: 0, stdout: '', stderr: '' }), repo);
+    expect(states.find(s => s.itemId === 'foo-mcp')?.installed).toBe(true);
+    expect(states.find(s => s.itemId === 'bar-mcp')?.installed).toBe(false);
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+it('mcp items report installed:false when no repoRoot is provided', async () => {
+  const items = [{
+    id: 'foo-mcp', name: 'Foo', description: '', kind: 'mcp' as const,
+    mcpKey: 'foo', mcpServer: { command: 'x' },
+  }];
+  const states = await detectStates(items);
+  expect(states[0]).toEqual({ itemId: 'foo-mcp', installed: false });
 });

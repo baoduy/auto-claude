@@ -78,7 +78,8 @@ describe('runDefaultInstall', () => {
 
   it('suppresses post-prompt events but logs a notice', async () => {
     const item: CatalogItem = {
-      ...mkItem('cs', 'plugin'),
+      id: 'cs', name: 'cs', description: '', kind: 'plugin', defaultScope: 'global',
+      detect: { command: 'cs -v' }, install: { command: 'install-cs' }, default: true,
       postInstall: [{ type: 'claude-prompt', value: 'hello', label: 'greet' }],
     };
     const logs: string[] = [];

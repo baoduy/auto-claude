@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import type { Catalog, CatalogGroup, CatalogItem, EngineEvent, InstallPlan, InstallState, Scope } from '../types.js';
+import { isShellItem } from '../types.js';
 import { ItemList } from './ItemList.js';
 import { PluginScopePrompt } from './PluginScopePrompt.js';
 import { ConfirmSummary } from './ConfirmSummary.js';
@@ -35,15 +36,31 @@ function findConflicts(catalog: Catalog, installedIds: Set<string>): ConflictIte
 
 export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }: AppProps): React.JSX.Element {
   const { exit } = useApp();
-  const items = useMemo(() => flattenItems(catalog), [catalog]);
-  const groupOf = useMemo(() => groupByItemId(catalog), [catalog]);
+
+  const hasMcpItems = useMemo(
+    () => catalog.groups.some((g) => g.items.some((i) => i.kind === 'mcp')),
+    [catalog],
+  );
+
+  const displayCatalog = useMemo(() => {
+    if (repoRoot) return catalog;
+    return {
+      ...catalog,
+      groups: catalog.groups
+        .map((g) => ({ ...g, items: g.items.filter((i) => i.kind !== 'mcp') }))
+        .filter((g) => g.items.length > 0),
+    };
+  }, [catalog, repoRoot]);
+
+  const items = useMemo(() => flattenItems(displayCatalog), [displayCatalog]);
+  const groupOf = useMemo(() => groupByItemId(displayCatalog), [displayCatalog]);
 
   const installedIds = useMemo(
     () => new Set(initialStates.filter((s) => s.installed).map((s) => s.itemId)),
     [initialStates],
   );
 
-  const initialConflicts = useMemo(() => findConflicts(catalog, installedIds), [catalog, installedIds]);
+  const initialConflicts = useMemo(() => findConflicts(displayCatalog, installedIds), [displayCatalog, installedIds]);
   const [pendingConflicts, setPendingConflicts] = useState<ConflictItem[]>(initialConflicts);
   const [forcedUninstallIds, setForcedUninstallIds] = useState<Set<string>>(new Set());
 
@@ -65,7 +82,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
   const userUninstallIds = [...effectiveInstalled].filter((id) => {
     if (selected.has(id)) return false;
     const it = items.find((i) => i.id === id);
-    return !!it?.uninstall;
+    return !!it && isShellItem(it) && !!it.uninstall;
   });
   const autoSwapIds = useMemo(() => {
     const out: string[] = [];
@@ -74,7 +91,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       if (!g || g.kind !== 'pick-one') continue;
       for (const sib of g.items) {
         if (sib.id === newId) continue;
-        if (effectiveInstalled.has(sib.id) && !selected.has(sib.id) && sib.uninstall) {
+        if (effectiveInstalled.has(sib.id) && !selected.has(sib.id) && isShellItem(sib) && sib.uninstall) {
           out.push(sib.id);
         }
       }
@@ -124,7 +141,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       else if (key.downArrow) setCursor((c) => Math.min(items.length - 1, c + 1));
       else if (input === ' ') {
         const it = items[cursor]!;
-        if (effectiveInstalled.has(it.id) && !it.uninstall) return;
+        if (effectiveInstalled.has(it.id) && !(isShellItem(it) && it.uninstall)) return;
         const group = groupOf.get(it.id);
         setSelected((s) => {
           const next = new Set(s);
@@ -187,7 +204,14 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     const adjustedStates: InstallState[] = initialStates.map((s) =>
       effectiveInstalled.has(s.itemId) ? s : { ...s, installed: false }
     );
-    body = <ItemList catalog={catalog} states={adjustedStates} selected={selected} cursor={cursor} />;
+    body = (
+      <Box flexDirection="column">
+        {!repoRoot && hasMcpItems && (
+          <Text dimColor>MCP items require a project (no repo detected).</Text>
+        )}
+        <ItemList catalog={displayCatalog} states={adjustedStates} selected={selected} cursor={cursor} />
+      </Box>
+    );
   } else if (screen === 'scope') {
     body = <PluginScopePrompt cursor={scopeCursor} hasRepo={!!repoRoot} />;
   } else if (screen === 'confirm') {

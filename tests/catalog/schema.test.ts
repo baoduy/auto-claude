@@ -83,3 +83,44 @@ describe('CatalogSchema v2', () => {
     expect(() => CatalogSchema.parse(ok)).not.toThrow();
   });
 });
+
+import { CatalogItemSchema } from '../../src/catalog/schema.js';
+
+describe('mcp item schema', () => {
+  const valid = {
+    id: 'context7-mcp',
+    name: 'context7',
+    description: 'Context7 MCP server',
+    kind: 'mcp',
+    mcpKey: 'context7',
+    mcpServer: {
+      command: 'npx',
+      args: ['-y', '@upstash/context7-mcp'],
+    },
+  };
+
+  it('accepts a valid mcp item', () => {
+    expect(() => CatalogItemSchema.parse(valid)).not.toThrow();
+  });
+
+  it('rejects an mcp item missing mcpKey', () => {
+    const { mcpKey: _omit, ...bad } = valid;
+    expect(() => CatalogItemSchema.parse(bad)).toThrow();
+  });
+
+  it('rejects an mcp item with empty mcpServer.command', () => {
+    expect(() => CatalogItemSchema.parse({ ...valid, mcpServer: { command: '' } })).toThrow();
+  });
+
+  it('rejects duplicate mcpKey across items', () => {
+    const cat = {
+      version: 2 as const,
+      updatedAt: '2026-05-05',
+      groups: [{
+        id: 'g', name: 'g', kind: 'pick-many' as const,
+        items: [valid, { ...valid, id: 'context7-mcp-2' }],
+      }],
+    };
+    expect(() => CatalogSchema.parse(cat)).toThrow(/duplicate mcpKey/);
+  });
+});

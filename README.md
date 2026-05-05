@@ -57,3 +57,16 @@ The catalog is fetched at runtime; the bundled fallback ships with these:
 - `claude` CLI (for plugin install)
 - `git` (for project-scoped operations)
 - `pip` (for graphify) and Homebrew (for rtk on macOS)
+
+## Releases
+
+Releases are published automatically by `.github/workflows/npm-publish.yaml`:
+
+- Pushes to `main` (or manual `workflow_dispatch`) compute the next version from
+  the commit log via [`paulhatch/semantic-version`](https://github.com/PaulHatch/semantic-version).
+  Use `(MAJOR)` / `(MINOR)` in commit subjects to bump major/minor; otherwise patch.
+- The workflow runs `pnpm typecheck && pnpm test && pnpm build`, updates
+  `package.json`, creates a tagged GitHub Release, and publishes to npm.
+
+**Required secret:** `NPM_TOKEN` — npm automation token with **Publish** permission.
+Add it under *Settings → Secrets and variables → Actions* on the GitHub repo.

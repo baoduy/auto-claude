@@ -196,7 +196,7 @@
     },
     {
       "id": "core-plugins",
-      "name": "Core Claude Code plugins",
+      "name": "Core plugins & skill packs",
       "kind": "pick-many",
       "items": [
         {
@@ -234,6 +234,30 @@
           "detect": { "command": "claude plugin list", "versionMatch": "plugin-dev" },
           "install":   { "command": "claude plugin install plugin-dev@claude-plugins-official" },
           "uninstall": { "command": "claude plugin uninstall plugin-dev" }
+        },
+        {
+          "id": "microsoft-skills",
+          "name": "microsoft/skills",
+          "description": "Microsoft skill marketplace — deep-wiki, Azure SDK skills, and AI Foundry plugins for general-purpose Azure development",
+          "kind": "plugin",
+          "homepage": "https://github.com/microsoft/skills",
+          "defaultScope": "global",
+          "default": false,
+          "detect":    { "command": "claude plugin list", "versionMatch": "skills" },
+          "install":   { "command": "claude plugin marketplace add microsoft/skills && claude plugin install deep-wiki@skills" },
+          "uninstall": { "command": "claude plugin uninstall deep-wiki" }
+        },
+        {
+          "id": "azure-skills",
+          "name": "microsoft/azure-skills",
+          "description": "Microsoft Azure skill marketplace — cloud resource management, deployments, and Azure services via MCP",
+          "kind": "plugin",
+          "homepage": "https://github.com/microsoft/azure-skills",
+          "defaultScope": "global",
+          "default": false,
+          "detect":    { "command": "claude plugin list", "versionMatch": "azure-skills" },
+          "install":   { "command": "claude plugin marketplace add microsoft/azure-skills && claude plugin install azure@azure-skills" },
+          "uninstall": { "command": "claude plugin uninstall azure" }
         }
       ]
     },
@@ -286,6 +310,38 @@
           "detect": { "command": "claude plugin list", "versionMatch": "dknet-minimal" },
           "install":   { "command": "claude plugin marketplace add baoduy/DKNet.Templates && claude plugin install dknet-minimal@dknet-marketplace" },
           "uninstall": { "command": "claude plugin uninstall dknet-minimal" }
+        }
+      ]
+    },
+    {
+      "id": "mcp-servers",
+      "name": "MCP servers (project)",
+      "description": "Add MCP servers to this project's .mcp.json",
+      "kind": "pick-many",
+      "items": [
+        {
+          "id": "context7-mcp",
+          "name": "Context7",
+          "description": "Up-to-date library docs via Context7 MCP",
+          "kind": "mcp",
+          "homepage": "https://github.com/upstash/context7",
+          "mcpKey": "context7",
+          "mcpServer": {
+            "command": "npx",
+            "args": ["-y", "@upstash/context7-mcp"]
+          }
+        },
+        {
+          "id": "microsoft-learn-mcp",
+          "name": "Microsoft Learn",
+          "description": "Microsoft Learn / Azure docs MCP server",
+          "kind": "mcp",
+          "homepage": "https://learn.microsoft.com",
+          "mcpKey": "microsoft-learn",
+          "mcpServer": {
+            "command": "npx",
+            "args": ["-y", "@microsoft/mcp-server-learn"]
+          }
         }
       ]
     }

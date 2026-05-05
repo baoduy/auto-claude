@@ -11,8 +11,8 @@ import { flattenItems } from '../catalog/groups.js';
 
 export async function runInstall(opts: { refreshCatalog?: boolean } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps({ refresh: opts.refreshCatalog }));
-  const initialStates = await detectStates(flattenItems(catalog));
   const repoRoot = await findRepoRoot();
+  const initialStates = await detectStates(flattenItems(catalog), undefined, repoRoot);
 
   const deferred: DeferredInteractive[] = [];
 
