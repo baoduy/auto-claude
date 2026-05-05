@@ -6,7 +6,7 @@ export interface PluginScopePromptProps {
   hasRepo: boolean;
 }
 
-export function PluginScopePrompt({ cursor, hasRepo }: PluginScopePromptProps): JSX.Element {
+export function PluginScopePrompt({ cursor, hasRepo }: PluginScopePromptProps): React.JSX.Element {
   return (
     <Box flexDirection="column">
       <Text bold>How should plugins be installed?</Text>

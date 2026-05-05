@@ -18,7 +18,7 @@ export interface AppProps {
   onComplete: (r: { aborted?: boolean; error?: string }) => void;
 }
 
-export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }: AppProps): JSX.Element {
+export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }: AppProps): React.JSX.Element {
   const { exit } = useApp();
   const items = catalog.items;
   const orderedForUI = useMemo(() =>
@@ -34,7 +34,14 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
   const [events, setEvents] = useState<EngineEvent[]>([]);
 
   const newSelected = [...selected].filter((id) => !installedIds.has(id));
-  const hasPlugin = newSelected.some((id) => items.find((i) => i.id === id)?.kind === 'plugin');
+  const toUninstallIds = [...installedIds].filter((id) => {
+    if (selected.has(id)) return false;
+    const it = items.find((i) => i.id === id);
+    return !!it?.uninstall;
+  });
+  const hasPlugin =
+    newSelected.some((id) => items.find((i) => i.id === id)?.kind === 'plugin') ||
+    toUninstallIds.some((id) => items.find((i) => i.id === id)?.kind === 'plugin');
 
   useInput((input, key) => {
     if (input === 'q' && screen !== 'run') {
@@ -47,14 +54,15 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       else if (key.downArrow) setCursor((c) => Math.min(orderedForUI.length - 1, c + 1));
       else if (input === ' ') {
         const it = orderedForUI[cursor]!;
-        if (installedIds.has(it.id)) return; // locked
+        // Lock only installed items that have no uninstaller — otherwise toggling means uninstall.
+        if (installedIds.has(it.id) && !it.uninstall) return;
         setSelected((s) => {
           const next = new Set(s);
           if (next.has(it.id)) next.delete(it.id); else next.add(it.id);
           return next;
         });
       } else if (key.return) {
-        if (newSelected.length === 0) { onComplete({}); exit(); return; }
+        if (newSelected.length === 0 && toUninstallIds.length === 0) { onComplete({}); exit(); return; }
         if (hasPlugin && repoRoot) setScreen('scope');
         else setScreen('confirm');
       }
@@ -70,6 +78,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
         setScreen('run');
         const plan: InstallPlan = {
           selected: newSelected.map((id) => items.find((i) => i.id === id)!),
+          uninstall: toUninstallIds.map((id) => items.find((i) => i.id === id)!),
           pluginScope,
           repoRoot,
         };
@@ -89,11 +98,17 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     return <PluginScopePrompt cursor={scopeCursor} hasRepo={!!repoRoot} />;
   }
   if (screen === 'confirm') {
-    const ordered = orderForInstall(newSelected.map((id) => items.find((i) => i.id === id)!));
-    const lines = ordered.map((it) => {
+    const uninstallItems = toUninstallIds.map((id) => items.find((i) => i.id === id)!);
+    const installItems = orderForInstall(newSelected.map((id) => items.find((i) => i.id === id)!));
+    const lines: string[] = [];
+    for (const it of [...uninstallItems].reverse()) {
       const scope = it.kind === 'plugin' ? ` (${pluginScope})` : '';
-      return `Install ${it.name}${scope}`;
-    });
+      lines.push(`Uninstall ${it.name}${scope}`);
+    }
+    for (const it of installItems) {
+      const scope = it.kind === 'plugin' ? ` (${pluginScope})` : '';
+      lines.push(`Install ${it.name}${scope}`);
+    }
     return <ConfirmSummary lines={lines} />;
   }
   if (screen === 'run') {

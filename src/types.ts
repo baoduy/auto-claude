@@ -49,13 +49,17 @@ export interface InstallState {
 /** User selections + plugin scope choice produced by the wizard. */
 export interface InstallPlan {
   selected: CatalogItem[];
+  /** Items the user unchecked that were previously installed. Run before `selected`. */
+  uninstall?: CatalogItem[];
   pluginScope: Scope;
   repoRoot: string | null;
 }
 
+export type Phase = 'install' | 'uninstall';
+
 /** Engine event types for streaming progress to the UI. */
 export type EngineEvent =
-  | { type: 'item-start'; itemId: string; label: string; index: number; total: number }
+  | { type: 'item-start'; itemId: string; label: string; index: number; total: number; phase?: Phase }
   | { type: 'item-success'; itemId: string }
   | { type: 'item-failure'; itemId: string; exitCode: number; stderrTail: string }
   | { type: 'post-shell-start'; itemId: string; label: string }

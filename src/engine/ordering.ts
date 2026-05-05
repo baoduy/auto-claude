@@ -17,3 +17,8 @@ export function orderForInstall(items: CatalogItem[]): CatalogItem[] {
   }
   return [...globalTools, ...repoTools, ...plugins];
 }
+
+/** Reverse of install order: plugins → repo-aware tools → global tools. */
+export function orderForUninstall(items: CatalogItem[]): CatalogItem[] {
+  return orderForInstall(items).reverse();
+}
