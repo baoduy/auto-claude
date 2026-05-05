@@ -234,6 +234,30 @@
           "detect": { "command": "claude plugin list", "versionMatch": "plugin-dev" },
           "install":   { "command": "claude plugin install plugin-dev@claude-plugins-official" },
           "uninstall": { "command": "claude plugin uninstall plugin-dev" }
+        },
+        {
+          "id": "microsoft-skills",
+          "name": "microsoft/skills",
+          "description": "Microsoft skill marketplace — deep-wiki, Azure SDK skills, and AI Foundry plugins for general-purpose Azure development",
+          "kind": "plugin",
+          "homepage": "https://github.com/microsoft/skills",
+          "defaultScope": "global",
+          "default": false,
+          "detect":    { "command": "claude plugin list", "versionMatch": "skills" },
+          "install":   { "command": "claude plugin marketplace add microsoft/skills && claude plugin install deep-wiki@skills" },
+          "uninstall": { "command": "claude plugin uninstall deep-wiki" }
+        },
+        {
+          "id": "azure-skills",
+          "name": "microsoft/azure-skills",
+          "description": "Microsoft Azure skill marketplace — cloud resource management, deployments, and Azure services via MCP",
+          "kind": "plugin",
+          "homepage": "https://github.com/microsoft/azure-skills",
+          "defaultScope": "global",
+          "default": false,
+          "detect":    { "command": "claude plugin list", "versionMatch": "azure-skills" },
+          "install":   { "command": "claude plugin marketplace add microsoft/azure-skills && claude plugin install azure@azure-skills" },
+          "uninstall": { "command": "claude plugin uninstall azure" }
         }
       ]
     },

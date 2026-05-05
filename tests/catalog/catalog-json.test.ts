@@ -21,10 +21,10 @@ describe('root catalog.json', () => {
   });
 });
 
-describe('core-plugins group — rename', () => {
+describe('core-plugins group', () => {
   const catalogs = [
-    { label: 'catalog.json',             path: '../../catalog.json' },
-    { label: 'src/catalog/bundled.json', path: '../../src/catalog/bundled.json' },
+    { label: 'catalog.json',              path: '../../catalog.json' },
+    { label: 'src/catalog/bundled.json',  path: '../../src/catalog/bundled.json' },
   ];
 
   for (const { label, path } of catalogs) {
@@ -34,6 +34,26 @@ describe('core-plugins group — rename', () => {
         const group = json.groups.find((g: { id: string }) => g.id === 'core-plugins');
         expect(group, 'core-plugins group must exist').toBeDefined();
         expect(group.name).toBe('Core plugins & skill packs');
+      });
+
+      it('has microsoft-skills entry in core-plugins', () => {
+        const json = loadCatalog(path);
+        const group = json.groups.find((g: { id: string }) => g.id === 'core-plugins');
+        const item = group?.items.find((i: { id: string }) => i.id === 'microsoft-skills');
+        expect(item, 'microsoft-skills item must exist in core-plugins').toBeDefined();
+        expect(item.kind).toBe('plugin');
+        expect(item.default).toBeFalsy();
+        expect(item.homepage).toBe('https://github.com/microsoft/skills');
+      });
+
+      it('has azure-skills entry in core-plugins', () => {
+        const json = loadCatalog(path);
+        const group = json.groups.find((g: { id: string }) => g.id === 'core-plugins');
+        const item = group?.items.find((i: { id: string }) => i.id === 'azure-skills');
+        expect(item, 'azure-skills item must exist in core-plugins').toBeDefined();
+        expect(item.kind).toBe('plugin');
+        expect(item.default).toBeFalsy();
+        expect(item.homepage).toBe('https://github.com/microsoft/azure-skills');
       });
     });
   }
