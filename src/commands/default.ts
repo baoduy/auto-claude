@@ -51,7 +51,9 @@ function formatRow(item: CatalogItem, state: InstallState | undefined): string {
     : paint(`${GLYPHS.missing} not installed`, 'dim');
   const kindGlyph = item.kind === 'tool'
     ? paint(GLYPHS.tool, 'tool')
-    : paint(GLYPHS.plugin, 'plugin');
+    : item.kind === 'mcp'
+      ? paint(GLYPHS.mcp, 'mcp')
+      : paint(GLYPHS.plugin, 'plugin');
   const sep = process.stdout.isTTY ? '  ' : '\t';
   // Pad id to 14 chars only when TTY, for clean alignment.
   const id = process.stdout.isTTY ? item.id.padEnd(14) : item.id;
@@ -60,6 +62,7 @@ function formatRow(item: CatalogItem, state: InstallState | undefined): string {
 
 export interface RunDefaultInstallDeps {
   items: CatalogItem[];
+  repoRoot?: string | null;
   detect: (items: CatalogItem[]) => Promise<InstallState[]>;
   run: (cmd: string, opts?: { cwd?: string }) => Promise<{ exitCode: number; stdout: string; stderr: string }>;
   log: (msg: string) => void;
@@ -85,6 +88,11 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
   const installedIds = new Set(states.filter((s) => s.installed).map((s) => s.itemId));
 
   for (const item of ordered) {
+    if (item.kind === 'mcp' && !deps.repoRoot) {
+      deps.log(paint(`${GLYPHS.info} ${item.id}: skipped (MCP items require a project repo)`, 'dim'));
+      result.skipped++;
+      continue;
+    }
     if (installedIds.has(item.id)) {
       deps.log(paint(`${GLYPHS.recycle} ${item.id} already installed`, 'dim'));
       result.skipped++;
@@ -151,6 +159,7 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
 
   const result = await runDefaultInstall({
     items: defaults,
+    repoRoot,
     detect: (items) => detectStates(items, undefined, repoRoot),
     run: richRun,
     log: (m) => process.stdout.write(m + '\n'),

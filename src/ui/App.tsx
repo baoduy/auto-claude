@@ -36,15 +36,31 @@ function findConflicts(catalog: Catalog, installedIds: Set<string>): ConflictIte
 
 export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }: AppProps): React.JSX.Element {
   const { exit } = useApp();
-  const items = useMemo(() => flattenItems(catalog), [catalog]);
-  const groupOf = useMemo(() => groupByItemId(catalog), [catalog]);
+
+  const hasMcpItems = useMemo(
+    () => catalog.groups.some((g) => g.items.some((i) => i.kind === 'mcp')),
+    [catalog],
+  );
+
+  const displayCatalog = useMemo(() => {
+    if (repoRoot) return catalog;
+    return {
+      ...catalog,
+      groups: catalog.groups
+        .map((g) => ({ ...g, items: g.items.filter((i) => i.kind !== 'mcp') }))
+        .filter((g) => g.items.length > 0),
+    };
+  }, [catalog, repoRoot]);
+
+  const items = useMemo(() => flattenItems(displayCatalog), [displayCatalog]);
+  const groupOf = useMemo(() => groupByItemId(displayCatalog), [displayCatalog]);
 
   const installedIds = useMemo(
     () => new Set(initialStates.filter((s) => s.installed).map((s) => s.itemId)),
     [initialStates],
   );
 
-  const initialConflicts = useMemo(() => findConflicts(catalog, installedIds), [catalog, installedIds]);
+  const initialConflicts = useMemo(() => findConflicts(displayCatalog, installedIds), [displayCatalog, installedIds]);
   const [pendingConflicts, setPendingConflicts] = useState<ConflictItem[]>(initialConflicts);
   const [forcedUninstallIds, setForcedUninstallIds] = useState<Set<string>>(new Set());
 
@@ -188,7 +204,14 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     const adjustedStates: InstallState[] = initialStates.map((s) =>
       effectiveInstalled.has(s.itemId) ? s : { ...s, installed: false }
     );
-    body = <ItemList catalog={catalog} states={adjustedStates} selected={selected} cursor={cursor} />;
+    body = (
+      <Box flexDirection="column">
+        {!repoRoot && hasMcpItems && (
+          <Text dimColor>MCP items require a project (no repo detected).</Text>
+        )}
+        <ItemList catalog={displayCatalog} states={adjustedStates} selected={selected} cursor={cursor} />
+      </Box>
+    );
   } else if (screen === 'scope') {
     body = <PluginScopePrompt cursor={scopeCursor} hasRepo={!!repoRoot} />;
   } else if (screen === 'confirm') {
