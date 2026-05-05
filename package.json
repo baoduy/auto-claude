@@ -25,11 +25,13 @@
   "dependencies": {
     "commander": "^14.0.3",
     "execa": "^9.6.1",
+    "figlet": "^1.11.0",
     "ink": "^7.0.1",
     "react": "^19.2.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/figlet": "^1.7.0",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "ink-testing-library": "^4.0.0",
