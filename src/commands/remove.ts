@@ -1,6 +1,7 @@
 import { execa } from 'execa';
 import { loadCatalog, defaultDeps } from '../catalog/loader.js';
 import { detectStates } from '../engine/detect.js';
+import { findRepoRoot } from '../engine/project.js';
 import type { CatalogItem, InstallState } from '../types.js';
 import { isShellItem } from '../types.js';
 import { printHeader } from '../ui/Header.js';
@@ -14,7 +15,8 @@ export function planUninstall(items: CatalogItem[], states: InstallState[]): Cat
 
 export async function runRemove(opts: { yes?: boolean } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps());
-  const states = await detectStates(flattenItems(catalog));
+  const repoRoot = await findRepoRoot();
+  const states = await detectStates(flattenItems(catalog), undefined, repoRoot);
   const targets = planUninstall(flattenItems(catalog), states);
   process.stdout.write(printHeader('remove'));
   if (targets.length === 0) {

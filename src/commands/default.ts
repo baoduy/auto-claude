@@ -1,6 +1,7 @@
 import type { CatalogItem, EngineEvent, InstallState } from '../types.js';
 import { detectStates, realShellRunner } from '../engine/detect.js';
 import { loadCatalog, defaultDeps } from '../catalog/loader.js';
+import { findRepoRoot } from '../engine/project.js';
 import { executeInstall } from '../engine/executor.js';
 import { orderForInstall } from '../engine/ordering.js';
 import { printHeader } from '../ui/Header.js';
@@ -21,7 +22,8 @@ export async function runDefaultList(opts: RunDefaultListOptions = {}): Promise<
     return;
   }
   const defaults = flattenItems(catalog).filter((i) => i.default === true);
-  const states = await detectStates(defaults);
+  const repoRoot = await findRepoRoot();
+  const states = await detectStates(defaults, undefined, repoRoot);
   process.stdout.write(printHeader('default --list'));
   process.stdout.write(renderDefaultList(catalog, states));
 }
@@ -141,13 +143,15 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
 
   process.stdout.write(printHeader('default'));
 
+  const repoRoot = await findRepoRoot();
+
   const richRun: RunDefaultInstallDeps['run'] = async (cmd) => {
     return realShellRunner(cmd);
   };
 
   const result = await runDefaultInstall({
     items: defaults,
-    detect: detectStates,
+    detect: (items) => detectStates(items, undefined, repoRoot),
     run: richRun,
     log: (m) => process.stdout.write(m + '\n'),
     err: (m) => process.stderr.write(m + '\n'),

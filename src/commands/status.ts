@@ -1,6 +1,7 @@
 import type { InstallState } from '../types.js';
 import { loadCatalog, defaultDeps } from '../catalog/loader.js';
 import { detectStates } from '../engine/detect.js';
+import { findRepoRoot } from '../engine/project.js';
 import { printHeader } from '../ui/Header.js';
 import { GLYPHS, paint } from '../ui/theme.js';
 import { flattenItems } from '../catalog/groups.js';
@@ -29,7 +30,8 @@ export function renderStatus(catalog: import('../types.js').Catalog, states: Ins
 
 export async function runStatus(opts: { refreshCatalog?: boolean } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps({ refresh: opts.refreshCatalog }));
-  const states = await detectStates(flattenItems(catalog));
+  const repoRoot = await findRepoRoot();
+  const states = await detectStates(flattenItems(catalog), undefined, repoRoot);
   process.stdout.write(printHeader('status'));
   console.log(renderStatus(catalog, states));
 }

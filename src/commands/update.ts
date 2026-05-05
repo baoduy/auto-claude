@@ -1,6 +1,7 @@
 import { execa } from 'execa';
 import { loadCatalog, defaultDeps } from '../catalog/loader.js';
 import { detectStates } from '../engine/detect.js';
+import { findRepoRoot } from '../engine/project.js';
 import type { CatalogItem, InstallState } from '../types.js';
 import { isShellItem } from '../types.js';
 import { printHeader } from '../ui/Header.js';
@@ -16,7 +17,8 @@ export function planUpdate(items: CatalogItem[], states: InstallState[], only?: 
 
 export async function runUpdate(opts: { only?: string } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps());
-  const states = await detectStates(flattenItems(catalog));
+  const repoRoot = await findRepoRoot();
+  const states = await detectStates(flattenItems(catalog), undefined, repoRoot);
   const targets = planUpdate(flattenItems(catalog), states, opts.only);
   process.stdout.write(printHeader('update'));
   if (targets.length === 0) { console.log('Nothing to update.'); return; }

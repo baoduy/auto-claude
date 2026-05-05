@@ -27,21 +27,21 @@ describe('mcp-config', () => {
   it('addMcpServer is a no-op when key already exists', () => {
     const cfg = { mcpServers: { foo: { command: 'a' } } };
     const next = addMcpServer(cfg, 'foo', { command: 'b' });
-    expect(next.mcpServers.foo.command).toBe('a');
+    expect(next.mcpServers['foo']?.command).toBe('a');
   });
 
   it('addMcpServer adds new keys without touching others', () => {
     const cfg = { mcpServers: { foo: { command: 'a' } } };
     const next = addMcpServer(cfg, 'bar', { command: 'b' });
-    expect(next.mcpServers.foo.command).toBe('a');
-    expect(next.mcpServers.bar.command).toBe('b');
+    expect(next.mcpServers['foo']?.command).toBe('a');
+    expect(next.mcpServers['bar']?.command).toBe('b');
   });
 
   it('updateMcpServer overwrites only the named key', () => {
     const cfg = { mcpServers: { foo: { command: 'a' }, bar: { command: 'b' } } };
     const next = updateMcpServer(cfg, 'foo', { command: 'a2' });
-    expect(next.mcpServers.foo.command).toBe('a2');
-    expect(next.mcpServers.bar.command).toBe('b');
+    expect(next.mcpServers['foo']?.command).toBe('a2');
+    expect(next.mcpServers['bar']?.command).toBe('b');
   });
 
   it('removeMcpServer deletes the key, leaves others, leaves empty object', () => {
