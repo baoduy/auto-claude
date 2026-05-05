@@ -30,6 +30,7 @@ export const CatalogItemSchema = z.object({
   uninstall: CommandSpecSchema.optional(),
   update: CommandSpecSchema.optional(),
   postInstall: z.array(PostInstallActionSchema).optional(),
+  default: z.boolean().optional(),
 });
 
 export const CatalogSchema = z.object({

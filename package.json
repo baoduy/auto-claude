@@ -8,7 +8,7 @@
   },
   "files": [
     "dist",
-    "src/catalog/bundled.json"
+    "catalog.json"
   ],
   "engines": {
     "node": ">=20"

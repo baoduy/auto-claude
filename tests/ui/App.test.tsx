@@ -3,7 +3,7 @@ import React from 'react';
 import { render } from 'ink-testing-library';
 import { App } from '../../src/ui/App.js';
 import type { Catalog, EngineEvent, InstallPlan, InstallState } from '../../src/types.js';
-import bundled from '../../src/catalog/bundled.json' with { type: 'json' };
+import bundled from '../../catalog.json' with { type: 'json' };
 
 const catalog = bundled as Catalog;
 const states: InstallState[] = catalog.items.map((i) => ({ itemId: i.id, installed: false }));

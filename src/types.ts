@@ -34,6 +34,8 @@ export interface CatalogItem {
   uninstall?: CommandSpec;
   update?: CommandSpec;
   postInstall?: PostInstallAction[];
+  /** When true, included by `auto-claude default` (silent fleet install). */
+  default?: boolean;
 }
 
 export interface Catalog {
