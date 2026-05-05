@@ -1,6 +1,7 @@
-import type { CatalogItem, DeferredInteractive, EngineEvent, InstallPlan, PostInstallAction } from '../types.js';
+import type { CatalogItem, DeferredInteractive, EngineEvent, InstallPlan, McpItem, PostInstallAction } from '../types.js';
 import { isShellItem } from '../types.js';
 import { orderForInstall, orderForUninstall } from './ordering.js';
+import { readMcpConfig, addMcpServer, removeMcpServer, writeMcpConfig, hasMcpServer } from './mcp-config.js';
 
 export interface RichRunResult { exitCode: number; stdout: string; stderr: string }
 export type RichRunner = (cmd: string, opts?: { cwd?: string }) => Promise<RichRunResult>;
@@ -13,6 +14,22 @@ export interface ExecuteOptions {
   record?: (cmd: string) => void;
   /** Collects interactive post-install actions to run after the wizard exits. */
   deferred?: DeferredInteractive[];
+}
+
+async function applyMcpInstall(item: McpItem, plan: InstallPlan): Promise<void> {
+  if (!plan.repoRoot) throw new Error(`mcp item ${item.id} requires a project (repoRoot)`);
+  const cfg = await readMcpConfig(plan.repoRoot);
+  if (hasMcpServer(cfg, item.mcpKey)) return; // idempotent skip
+  const next = addMcpServer(cfg, item.mcpKey, item.mcpServer);
+  await writeMcpConfig(plan.repoRoot, next);
+}
+
+async function applyMcpUninstall(item: McpItem, plan: InstallPlan): Promise<void> {
+  if (!plan.repoRoot) return;
+  const cfg = await readMcpConfig(plan.repoRoot);
+  if (!hasMcpServer(cfg, item.mcpKey)) return;
+  const next = removeMcpServer(cfg, item.mcpKey);
+  await writeMcpConfig(plan.repoRoot, next);
 }
 
 function resolveCwd(item: CatalogItem, plan: InstallPlan): string | undefined {
@@ -50,8 +67,12 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
       if (opts.dryRun) {
         opts.record?.(`# remove ${item.mcpKey} from .mcp.json`);
       } else {
-        // TODO (Task 3.5): implement mcp uninstall
-        throw new Error('todo');
+        try {
+          await applyMcpUninstall(item, plan);
+        } catch (err: any) {
+          opts.onEvent({ type: 'item-failure', itemId: item.id, exitCode: 1, stderrTail: tailStderr(String(err?.message ?? err)) });
+          throw new Error(`Uninstall failed for ${item.id}: ${err?.message ?? err}`);
+        }
       }
     } else {
       if (opts.dryRun) {
@@ -80,8 +101,12 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
       if (opts.dryRun) {
         opts.record?.(`# write ${item.mcpKey} to .mcp.json`);
       } else {
-        // TODO (Task 3.5): implement mcp install
-        throw new Error('todo');
+        try {
+          await applyMcpInstall(item, plan);
+        } catch (err: any) {
+          opts.onEvent({ type: 'item-failure', itemId: item.id, exitCode: 1, stderrTail: tailStderr(String(err?.message ?? err)) });
+          throw new Error(`Install failed for ${item.id}: ${err?.message ?? err}`);
+        }
       }
     } else {
       if (opts.dryRun) {
