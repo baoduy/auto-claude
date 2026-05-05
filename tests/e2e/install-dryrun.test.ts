@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { executeInstall } from '../../src/engine/executor.js';
-import bundled from '../../src/catalog/bundled.json' with { type: 'json' };
+import bundled from '../../catalog.json' with { type: 'json' };
 import type { Catalog, InstallPlan } from '../../src/types.js';
 
 describe('e2e: install dry-run for all bundled items, project scope', () => {

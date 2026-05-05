@@ -7,6 +7,7 @@
       "name": "claude-mem",
       "description": "Persistent cross-session memory for Claude Code",
       "kind": "plugin",
+      "homepage": "https://github.com/thedotmack/claude-mem",
       "defaultScope": "global",
       "detect": { "command": "claude plugin list", "versionMatch": "claude-mem" },
       "install":   { "command": "claude plugin install claude-mem@thedotmack" },
@@ -17,6 +18,7 @@
       "name": "rtk",
       "description": "Rust Token Killer — token-optimized CLI proxy",
       "kind": "tool",
+      "homepage": "https://github.com/rtk-ai/rtk",
       "defaultScope": "global",
       "detect": { "command": "rtk --version" },
       "install":   { "command": "brew install rtk" },
@@ -24,6 +26,35 @@
       "update":    { "command": "brew upgrade rtk" },
       "postInstall": [
         { "type": "shell", "value": "rtk init -g", "requiresRepo": true, "label": "Initializing rtk in repo" }
+      ]
+    },
+    {
+      "id": "graphify",
+      "name": "graphify",
+      "description": "Knowledge-graph builder for your codebase, surfaced via the /graphify slash command",
+      "kind": "tool",
+      "homepage": "https://github.com/safishamsi/graphify",
+      "defaultScope": "global",
+      "detect": { "command": "graphify --version" },
+      "install":   { "command": "pip install graphifyy && graphify install" },
+      "postInstall": [
+        { "type": "shell", "value": "graphify hook install", "requiresRepo": true, "label": "Installing graphify git hook" }
+      ]
+    },
+    {
+      "id": "gitnexus",
+      "name": "gitnexus",
+      "description": "Code intelligence engine — indexes your repo into a knowledge graph and exposes it via MCP",
+      "kind": "tool",
+      "homepage": "https://github.com/abhigyanpatwari/GitNexus",
+      "defaultScope": "project",
+      "detect": { "command": "gitnexus --version" },
+      "install":   { "command": "npm install -g gitnexus" },
+      "uninstall": { "command": "npm uninstall -g gitnexus" },
+      "update":    { "command": "npm install -g gitnexus@latest" },
+      "postInstall": [
+        { "type": "shell", "value": "claude mcp add gitnexus -- npx -y gitnexus@latest mcp", "label": "Registering gitnexus MCP server" },
+        { "type": "shell", "value": "npx gitnexus analyze", "requiresRepo": true, "label": "Indexing repo into knowledge graph" }
       ]
     },
     {
@@ -48,6 +79,130 @@
       "postInstall": [
         { "type": "claude-prompt", "label": "Trigger automation recommender",
           "value": "Ask Claude in this repo: \"recommend automations for this project\"" }
+      ]
+    },
+    {
+      "id": "microsoft-docs",
+      "name": "microsoft-docs",
+      "description": "Official Microsoft / Azure / .NET documentation, API references, and code samples",
+      "kind": "plugin",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "microsoft-docs" },
+      "install":   { "command": "claude plugin install microsoft-docs@claude-plugins-official" },
+      "uninstall": { "command": "claude plugin uninstall microsoft-docs" }
+    },
+    {
+      "id": "context7",
+      "name": "context7",
+      "description": "Upstash Context7 — version-specific library docs and examples pulled into LLM context",
+      "kind": "plugin",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "context7" },
+      "install":   { "command": "claude plugin install context7@claude-plugins-official" },
+      "uninstall": { "command": "claude plugin uninstall context7" }
+    },
+    {
+      "id": "plugin-dev",
+      "name": "plugin-dev",
+      "description": "Toolkit for developing Claude Code plugins (hooks, MCP, commands, agents, best practices)",
+      "kind": "plugin",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "plugin-dev" },
+      "install":   { "command": "claude plugin install plugin-dev@claude-plugins-official" },
+      "uninstall": { "command": "claude plugin uninstall plugin-dev" }
+    },
+    {
+      "id": "drunk-app",
+      "name": "drunk-app",
+      "description": "AI assistant for configuring drunk-app Helm chart deployments (values.yaml, validation)",
+      "kind": "plugin",
+      "homepage": "https://github.com/baoduy/drunk.charts",
+      "defaultScope": "project",
+      "detect": { "command": "claude plugin list", "versionMatch": "drunk-app" },
+      "install":   { "command": "claude plugin marketplace add baoduy/drunk.charts && claude plugin install drunk-app@drunk-charts" },
+      "uninstall": { "command": "claude plugin uninstall drunk-app" }
+    },
+    {
+      "id": "dknet-minimal",
+      "name": "dknet-minimal",
+      "description": "Slash commands, subagents, and skills for vertical-slice features on DKNet.Minimal.Template (.NET 10, DDD/CQRS, EF Core)",
+      "kind": "plugin",
+      "homepage": "https://github.com/baoduy/DKNet.Templates",
+      "defaultScope": "project",
+      "detect": { "command": "claude plugin list", "versionMatch": "dknet-minimal" },
+      "install":   { "command": "claude plugin marketplace add baoduy/DKNet.Templates && claude plugin install dknet-minimal@dknet-marketplace" },
+      "uninstall": { "command": "claude plugin uninstall dknet-minimal" }
+    },
+    {
+      "id": "context-mode",
+      "name": "context-mode",
+      "description": "MCP server that sandboxes tool output and indexes session events — ~98% context reduction",
+      "kind": "tool",
+      "homepage": "https://github.com/mksglu/context-mode",
+      "defaultScope": "global",
+      "detect":    { "command": "context-mode --version" },
+      "install":   { "command": "npm install -g context-mode" },
+      "uninstall": { "command": "npm uninstall -g context-mode" },
+      "update":    { "command": "npm install -g context-mode@latest" },
+      "postInstall": [
+        { "type": "shell", "value": "claude mcp add context-mode -- npx -y context-mode", "label": "Registering context-mode MCP server" }
+      ]
+    },
+    {
+      "id": "snip",
+      "name": "Snip",
+      "description": "Visual mode for Claude Code — render diagrams, annotate previews, OCR screenshots (macOS via Homebrew cask)",
+      "kind": "tool",
+      "homepage": "https://github.com/rixinhahaha/snip",
+      "defaultScope": "global",
+      "detect":    { "command": "snip --help" },
+      "install":   { "command": "brew install --cask rixinhahaha/snip/snip" },
+      "uninstall": { "command": "brew uninstall --cask snip" },
+      "update":    { "command": "brew upgrade --cask snip" },
+      "postInstall": [
+        { "type": "shell", "value": "snip setup", "label": "Wiring Snip into Claude Code", "interactive": true }
+      ]
+    },
+    {
+      "id": "codeburn",
+      "name": "codeburn",
+      "description": "TUI dashboard for AI coding token usage and cost across 18 providers",
+      "kind": "tool",
+      "homepage": "https://github.com/getagentseal/codeburn",
+      "defaultScope": "global",
+      "detect":    { "command": "codeburn --version" },
+      "install":   { "command": "npm install -g codeburn" },
+      "uninstall": { "command": "npm uninstall -g codeburn" },
+      "update":    { "command": "npm install -g codeburn@latest" }
+    },
+    {
+      "id": "spec-kit",
+      "name": "spec-kit",
+      "description": "GitHub's Spec-Driven Development toolkit — /speckit.* slash commands for spec → plan → tasks → implement",
+      "kind": "plugin",
+      "homepage": "https://github.com/github/spec-kit",
+      "defaultScope": "project",
+      "detect":    { "command": "specify --version" },
+      "install":   { "command": "sh -c 'if ! command -v uv >/dev/null 2>&1; then echo \"Error: uv is required for spec-kit. Install it first with: brew install uv (macOS) — or see https://docs.astral.sh/uv/getting-started/installation/ for other platforms.\" 1>&2; exit 1; fi; uv tool install specify-cli --from git+https://github.com/github/spec-kit.git'" },
+      "uninstall": { "command": "uv tool uninstall specify-cli" },
+      "update":    { "command": "uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git" },
+      "postInstall": [
+        { "type": "shell", "value": "specify init . --integration claude --force", "requiresRepo": true, "label": "Initializing spec-kit in repo (Claude integration)" }
+      ]
+    },
+    {
+      "id": "open-spec",
+      "name": "OpenSpec",
+      "description": "Spec-driven development framework — /opsx:* slash commands for proposal → apply → archive",
+      "kind": "plugin",
+      "homepage": "https://github.com/Fission-AI/OpenSpec",
+      "defaultScope": "project",
+      "detect":    { "command": "openspec --version" },
+      "install":   { "command": "npm install -g @fission-ai/openspec@latest" },
+      "uninstall": { "command": "npm uninstall -g @fission-ai/openspec" },
+      "update":    { "command": "npm install -g @fission-ai/openspec@latest" },
+      "postInstall": [
+        { "type": "shell", "value": "openspec init", "requiresRepo": true, "label": "Initializing OpenSpec in repo" }
       ]
     }
   ]

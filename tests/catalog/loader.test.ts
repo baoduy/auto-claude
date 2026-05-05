@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { loadCatalog, type LoaderDeps } from '../../src/catalog/loader.js';
-import bundled from '../../src/catalog/bundled.json' with { type: 'json' };
+import bundled from '../../catalog.json' with { type: 'json' };
 
 const validJson = JSON.stringify(bundled);
 
