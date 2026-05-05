@@ -1,68 +1,85 @@
 import { describe, it, expect } from 'vitest';
-import { CatalogSchema, CatalogItemSchema } from '../../src/catalog/schema.js';
+import { CatalogSchema } from '../../src/catalog/schema.js';
 
-describe('CatalogSchema', () => {
-  const valid = {
-    version: 1,
-    updatedAt: '2026-05-05',
-    items: [{
-      id: 'rtk',
-      name: 'rtk',
-      description: 'token proxy',
-      kind: 'tool',
-      defaultScope: 'global',
-      detect: { command: 'rtk --version' },
-      install: { command: 'npm i -g rtk' },
-    }],
-  };
-
-  it('accepts a minimal valid catalog', () => {
-    expect(() => CatalogSchema.parse(valid)).not.toThrow();
-  });
-
-  it('rejects unknown kind', () => {
-    const bad = { ...valid, items: [{ ...valid.items[0], kind: 'addon' }] };
-    expect(() => CatalogSchema.parse(bad)).toThrow();
-  });
-
-  it('rejects missing detect.command', () => {
-    const bad = { ...valid, items: [{ ...valid.items[0], detect: {} }] };
-    expect(() => CatalogSchema.parse(bad)).toThrow();
-  });
-
-  it('accepts optional postInstall actions', () => {
-    const ok = {
-      ...valid,
-      items: [{
-        ...valid.items[0],
-        postInstall: [{ type: 'shell', value: 'rtk init -g', requiresRepo: true }],
-      }],
-    };
-    expect(() => CatalogSchema.parse(ok)).not.toThrow();
-  });
+const baseItem = (id: string, extra: Record<string, unknown> = {}) => ({
+  id,
+  name: id,
+  description: 'x',
+  kind: 'tool',
+  defaultScope: 'global',
+  detect: { command: 'true' },
+  install: { command: 'true' },
+  ...extra,
 });
 
-describe('CatalogItemSchema default field', () => {
-  const base = {
-    id: 'x', name: 'x', description: '', kind: 'tool',
-    defaultScope: 'global',
-    detect: { command: 'x -v' },
-    install: { command: 'echo' },
-  };
+const validCatalog = {
+  version: 2,
+  updatedAt: '2026-05-05',
+  groups: [
+    { id: 'g1', name: 'G1', kind: 'pick-many', items: [baseItem('a'), baseItem('b')] },
+    { id: 'g2', name: 'G2', kind: 'pick-one', items: [baseItem('c', { default: true }), baseItem('d')] },
+  ],
+};
 
-  it('accepts default: true', () => {
-    expect(() => CatalogItemSchema.parse({ ...base, default: true })).not.toThrow();
+describe('CatalogSchema v2', () => {
+  it('accepts a valid v2 catalog', () => {
+    expect(() => CatalogSchema.parse(validCatalog)).not.toThrow();
   });
 
-  it('accepts default: false', () => {
-    expect(() => CatalogItemSchema.parse({ ...base, default: false })).not.toThrow();
+  it('rejects v1 (no groups)', () => {
+    const v1 = { version: 1, updatedAt: '2026-05-05', items: [baseItem('a')] };
+    expect(() => CatalogSchema.parse(v1)).toThrow();
   });
 
-  it('accepts items without a default field', () => {
-    expect(() => CatalogItemSchema.parse(base)).not.toThrow();
+  it('rejects duplicate item ids across groups', () => {
+    const bad = {
+      version: 2,
+      updatedAt: '2026-05-05',
+      groups: [
+        { id: 'g1', name: 'G1', kind: 'pick-many', items: [baseItem('dup')] },
+        { id: 'g2', name: 'G2', kind: 'pick-many', items: [baseItem('dup')] },
+      ],
+    };
+    expect(() => CatalogSchema.parse(bad)).toThrow(/duplicate item id/i);
   });
 
-  it('rejects default as a string', () => {
-    expect(() => CatalogItemSchema.parse({ ...base, default: 'true' })).toThrow();
+  it('rejects duplicate group ids', () => {
+    const bad = {
+      version: 2,
+      updatedAt: '2026-05-05',
+      groups: [
+        { id: 'same', name: 'A', kind: 'pick-many', items: [baseItem('a')] },
+        { id: 'same', name: 'B', kind: 'pick-many', items: [baseItem('b')] },
+      ],
+    };
+    expect(() => CatalogSchema.parse(bad)).toThrow(/duplicate group id/i);
+  });
+
+  it('rejects multiple default:true in a pick-one group', () => {
+    const bad = {
+      version: 2,
+      updatedAt: '2026-05-05',
+      groups: [
+        { id: 'g1', name: 'G1', kind: 'pick-one', items: [
+          baseItem('a', { default: true }),
+          baseItem('b', { default: true }),
+        ] },
+      ],
+    };
+    expect(() => CatalogSchema.parse(bad)).toThrow(/at most one default/i);
+  });
+
+  it('allows multiple default:true in a pick-many group', () => {
+    const ok = {
+      version: 2,
+      updatedAt: '2026-05-05',
+      groups: [
+        { id: 'g1', name: 'G1', kind: 'pick-many', items: [
+          baseItem('a', { default: true }),
+          baseItem('b', { default: true }),
+        ] },
+      ],
+    };
+    expect(() => CatalogSchema.parse(ok)).not.toThrow();
   });
 });
