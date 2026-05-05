@@ -18,7 +18,19 @@ Pick the tools and plugins you want from the checklist; auto-claude installs the
 | `npx auto-claude status` | Show installed/missing state |
 | `npx auto-claude remove [--yes]` | Uninstall installed items |
 | `npx auto-claude update [--only <id>]` | Update installed items |
+| `npx auto-claude default` | Silently install all `default: true` items globally (for fleet automation) |
+| `npx auto-claude default --list` (or `-l`) | List default items and their installed state |
 | `npx auto-claude --refresh-catalog` | Bypass the 24h catalog cache |
+
+### Fleet automation
+
+`npx auto-claude default` is non-interactive — no prompts, no TTY required, idempotent. Use it from a bash script to provision every machine in your company:
+
+```bash
+npx -y auto-claude default
+```
+
+Items shipped to every device are flagged `"default": true` in `catalog.json`. The command runs detection first and skips anything already installed, continues past per-item failures, and exits `0` on success, `1` on partial failure, or `2` on catalog load failure.
 
 ## What it installs
 
