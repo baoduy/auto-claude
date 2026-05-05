@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { loadCatalog, type LoaderDeps } from '../../src/catalog/loader.js';
+import { flattenItems } from '../../src/catalog/groups.js';
 import bundled from '../../catalog.json' with { type: 'json' };
 
 const validJson = JSON.stringify(bundled);
+const bundledItemCount = flattenItems(bundled as never).length;
 
 function makeDeps(overrides: Partial<LoaderDeps> = {}): LoaderDeps {
   return {
@@ -20,7 +22,7 @@ describe('loadCatalog', () => {
   it('returns remote catalog and writes cache on success', async () => {
     const writeCache = vi.fn(async () => {});
     const cat = await loadCatalog(makeDeps({ writeCache }));
-    expect(cat.items).toHaveLength(bundled.items.length);
+    expect(flattenItems(cat)).toHaveLength(bundledItemCount);
     expect(writeCache).toHaveBeenCalledOnce();
   });
 
@@ -32,7 +34,7 @@ describe('loadCatalog', () => {
         writtenAt: new Date('2026-05-04T23:00:00Z').getTime(),
       }),
     }));
-    expect(cat.items).toHaveLength(bundled.items.length);
+    expect(flattenItems(cat)).toHaveLength(bundledItemCount);
   });
 
   it('falls back to bundled when network fails and cache is stale', async () => {
@@ -43,7 +45,7 @@ describe('loadCatalog', () => {
         writtenAt: new Date('2026-04-25T00:00:00Z').getTime(), // >7d old
       }),
     }));
-    expect(cat.items).toHaveLength(bundled.items.length);
+    expect(flattenItems(cat)).toHaveLength(bundledItemCount);
   });
 
   it('falls back to bundled when remote returns malformed json', async () => {
@@ -51,7 +53,7 @@ describe('loadCatalog', () => {
       fetchUrl: async () => ({ ok: true, body: '{"not":"valid"}' }),
       readCache: async () => null,
     }));
-    expect(cat.items).toHaveLength(bundled.items.length);
+    expect(flattenItems(cat)).toHaveLength(bundledItemCount);
   });
 
   it('refresh=true bypasses cache', async () => {
