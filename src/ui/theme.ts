@@ -31,6 +31,9 @@ export const GLYPHS = {
   cursor: '▶',
   selected: '◉',
   unselected: '○',
+  // radio
+  radioOn: '◉',
+  radioOff: '○',
   // misc
   brand: '✱',
   running: '·',
