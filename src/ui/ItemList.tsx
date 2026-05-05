@@ -90,7 +90,7 @@ export function ItemList({ catalog, states, selected, cursor }: ItemListProps): 
     <Box flexDirection="column">
       {catalog.groups.map((g) => (
         <Box key={g.id} flexDirection="column" marginTop={1}>
-          <Text bold color={COLORS.brand}>
+          <Text bold color={COLORS.group}>
             {g.name}
             {g.kind === 'pick-one' ? <Text dimColor> (pick one)</Text> : null}
           </Text>
