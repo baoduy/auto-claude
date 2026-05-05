@@ -196,7 +196,7 @@
     },
     {
       "id": "core-plugins",
-      "name": "Core Claude Code plugins",
+      "name": "Core plugins & skill packs",
       "kind": "pick-many",
       "items": [
         {
