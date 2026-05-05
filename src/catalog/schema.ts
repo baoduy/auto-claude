@@ -15,6 +15,7 @@ const PostInstallActionSchema = z.object({
   value: z.string().min(1),
   requiresRepo: z.boolean().optional(),
   label: z.string().optional(),
+  interactive: z.boolean().optional(),
 });
 
 export const CatalogItemSchema = z.object({
