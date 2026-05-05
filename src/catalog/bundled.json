@@ -312,6 +312,38 @@
           "uninstall": { "command": "claude plugin uninstall dknet-minimal" }
         }
       ]
+    },
+    {
+      "id": "mcp-servers",
+      "name": "MCP servers (project)",
+      "description": "Add MCP servers to this project's .mcp.json",
+      "kind": "pick-many",
+      "items": [
+        {
+          "id": "context7-mcp",
+          "name": "Context7",
+          "description": "Up-to-date library docs via Context7 MCP",
+          "kind": "mcp",
+          "homepage": "https://github.com/upstash/context7",
+          "mcpKey": "context7",
+          "mcpServer": {
+            "command": "npx",
+            "args": ["-y", "@upstash/context7-mcp"]
+          }
+        },
+        {
+          "id": "microsoft-learn-mcp",
+          "name": "Microsoft Learn",
+          "description": "Microsoft Learn / Azure docs MCP server",
+          "kind": "mcp",
+          "homepage": "https://learn.microsoft.com",
+          "mcpKey": "microsoft-learn",
+          "mcpServer": {
+            "command": "npx",
+            "args": ["-y", "@microsoft/mcp-server-learn"]
+          }
+        }
+      ]
     }
   ]
 }

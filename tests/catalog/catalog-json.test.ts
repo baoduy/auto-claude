@@ -58,3 +58,26 @@ describe('core-plugins group', () => {
     });
   }
 });
+
+describe('mcp-servers group', () => {
+  it('contains an mcp-servers pick-many group', () => {
+    const json = loadCatalog('../../catalog.json');
+    const group = json.groups.find((g: any) => g.id === 'mcp-servers');
+    expect(group).toBeDefined();
+    expect(group.kind).toBe('pick-many');
+    expect(group.name).toBe('MCP servers (project)');
+  });
+
+  it('seeds context7-mcp and microsoft-learn-mcp', () => {
+    const json = loadCatalog('../../catalog.json');
+    const group = json.groups.find((g: any) => g.id === 'mcp-servers')!;
+    const c7 = group.items.find((i: any) => i.id === 'context7-mcp');
+    const ms = group.items.find((i: any) => i.id === 'microsoft-learn-mcp');
+    expect(c7).toBeDefined();
+    expect(ms).toBeDefined();
+    expect(c7.kind).toBe('mcp');
+    expect(ms.kind).toBe('mcp');
+    expect(typeof c7.mcpKey).toBe('string');
+    expect(typeof ms.mcpKey).toBe('string');
+  });
+});
