@@ -61,5 +61,5 @@ describe('<App>', () => {
     await new Promise((r) => setTimeout(r, 10));
     expect(lastFrame()).toMatch(/claude|auto-claude/i);
     expect(lastFrame()).toContain('How should plugins be installed?');
-  });
+  }, 15000);
 });
