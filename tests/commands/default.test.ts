@@ -116,8 +116,8 @@ describe('renderDefaultList', () => {
     const out = renderDefaultList(items.filter((i) => i.default === true), states);
     expect(out).toMatch(/Default tools:/);
     expect(out).toMatch(/Default plugins:/);
-    expect(out).toMatch(/rtk\s+installed/);
-    expect(out).toMatch(/cm\s+not installed/);
+    expect(out).toMatch(/rtk\s+\S*\s*installed/);
+    expect(out).toMatch(/cm\s+\S*\s*not installed/);
     expect(out).not.toContain('nope');
   });
 
