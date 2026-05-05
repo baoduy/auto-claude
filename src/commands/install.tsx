@@ -7,10 +7,11 @@ import { executeInstall } from '../engine/executor.js';
 import { App } from '../ui/App.js';
 import { execa } from 'execa';
 import type { DeferredInteractive, EngineEvent, InstallPlan } from '../types.js';
+import { flattenItems } from '../catalog/groups.js';
 
 export async function runInstall(opts: { refreshCatalog?: boolean } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps({ refresh: opts.refreshCatalog }));
-  const initialStates = await detectStates(catalog.items);
+  const initialStates = await detectStates(flattenItems(catalog));
   const repoRoot = await findRepoRoot();
 
   const deferred: DeferredInteractive[] = [];

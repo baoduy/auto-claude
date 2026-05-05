@@ -1,30 +1,53 @@
-import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
+import { describe, it, expect } from 'vitest';
 import { render } from 'ink-testing-library';
 import { ItemList } from '../../src/ui/ItemList.js';
-import type { CatalogItem, InstallState } from '../../src/types.js';
+import type { Catalog } from '../../src/types.js';
 
-const items: CatalogItem[] = [
-  { id: 'a', name: 'A-tool', description: 'desc A', kind: 'tool', defaultScope: 'global',
-    detect: { command: '' }, install: { command: '' } },
-  { id: 'b', name: 'B-plug', description: 'desc B', kind: 'plugin', defaultScope: 'global',
-    detect: { command: '' }, install: { command: '' } },
-];
-const states: InstallState[] = [
-  { itemId: 'a', installed: true },
-  { itemId: 'b', installed: false },
-];
+const catalog: Catalog = {
+  version: 2,
+  updatedAt: '2026-05-05',
+  groups: [
+    {
+      id: 'memory', name: 'Memory backend', kind: 'pick-one',
+      items: [
+        { id: 'a', name: 'A', description: 'item-a', kind: 'plugin', defaultScope: 'global',
+          detect: { command: 'true' }, install: { command: 'true' }, uninstall: { command: 'true' } },
+        { id: 'b', name: 'B', description: 'item-b', kind: 'tool', defaultScope: 'global',
+          detect: { command: 'true' }, install: { command: 'true' }, uninstall: { command: 'true' } },
+      ],
+    },
+    {
+      id: 'docs', name: 'Documentation providers', kind: 'pick-many',
+      items: [
+        { id: 'c', name: 'C', description: 'item-c', kind: 'plugin', defaultScope: 'global',
+          detect: { command: 'true' }, install: { command: 'true' } },
+      ],
+    },
+  ],
+};
 
-describe('<ItemList>', () => {
-  it('renders both groups and an installed badge', () => {
+describe('ItemList grouped layout', () => {
+  it('shows group headers', () => {
     const { lastFrame } = render(
-      <ItemList items={items} states={states} selected={new Set(['a'])} cursor={0} />
+      <ItemList catalog={catalog} states={[]} selected={new Set(['a'])} cursor={0} />
     );
-    const out = lastFrame() ?? '';
-    expect(out).toContain('Tools');
-    expect(out).toContain('Plugins');
-    expect(out).toContain('A-tool');
-    expect(out).toContain('B-plug');
-    expect(out).toContain('installed');
+    expect(lastFrame()).toMatch(/Memory backend/);
+    expect(lastFrame()).toMatch(/Documentation providers/);
+  });
+
+  it('renders pick-one members with radio glyphs', () => {
+    const { lastFrame } = render(
+      <ItemList catalog={catalog} states={[]} selected={new Set(['a'])} cursor={0} />
+    );
+    expect(lastFrame()).toMatch(/[◉●]/);
+    expect(lastFrame()).toMatch(/[○◯]/);
+  });
+
+  it('renders pick-many members with checkbox glyphs', () => {
+    const { lastFrame } = render(
+      <ItemList catalog={catalog} states={[]} selected={new Set()} cursor={0} />
+    );
+    expect(lastFrame()).toMatch(/\[ \]/);
   });
 });

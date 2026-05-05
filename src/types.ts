@@ -38,10 +38,20 @@ export interface CatalogItem {
   default?: boolean;
 }
 
-export interface Catalog {
-  version: number;
-  updatedAt: string;
+export type GroupKind = 'pick-one' | 'pick-many';
+
+export interface CatalogGroup {
+  id: string;
+  name: string;
+  description?: string;
+  kind: GroupKind;
   items: CatalogItem[];
+}
+
+export interface Catalog {
+  version: 2;
+  updatedAt: string;
+  groups: CatalogGroup[];
 }
 
 export interface InstallState {

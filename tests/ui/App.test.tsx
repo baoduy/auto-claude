@@ -2,11 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render } from 'ink-testing-library';
 import { App } from '../../src/ui/App.js';
-import type { Catalog, EngineEvent, InstallPlan, InstallState } from '../../src/types.js';
+import type { Catalog, CatalogItem, EngineEvent, InstallPlan, InstallState } from '../../src/types.js';
+import { flattenItems } from '../../src/catalog/groups.js';
 import bundled from '../../catalog.json' with { type: 'json' };
 
 const catalog = bundled as Catalog;
-const states: InstallState[] = catalog.items.map((i) => ({ itemId: i.id, installed: false }));
+const states: InstallState[] = flattenItems(catalog).map((i) => ({ itemId: i.id, installed: false }));
 
 describe('<App>', () => {
   let originalIsTTY: boolean | undefined;
@@ -31,7 +32,7 @@ describe('<App>', () => {
         runInstall={async () => {}} onComplete={onComplete}
       />
     );
-    expect(lastFrame()).toContain('Tools');
+    expect(lastFrame()).toContain('Memory backend');
     expect(lastFrame()).toMatch(/claude|auto-claude/i);
     await new Promise((r) => setTimeout(r, 10)); // wait for useInput to register
     stdin.write('q');
@@ -47,19 +48,85 @@ describe('<App>', () => {
         runInstall={async () => {}} onComplete={onComplete}
       />
     );
-    // Cursor at 0 (rtk, a tool). Move down to a plugin then toggle. Order: tools first, then plugins.
-    // Tools: rtk, graphify, gitnexus, context-mode, snip, codeburn (6 total).
-    // First plugin is at cursor 6. Navigate down 6 times, space, enter.
+    // Cursor at 0 (claude-mem, a plugin). Toggle it, then enter.
     await new Promise((r) => setTimeout(r, 10)); // wait for useInput to register
-    for (let i = 0; i < 6; i++) {
-      stdin.write('\x1b[B'); // ↓
-      await new Promise((r) => setTimeout(r, 10));
-    }
-    stdin.write(' '); // toggle (first plugin)
+    stdin.write(' '); // toggle (first item is already a plugin)
     await new Promise((r) => setTimeout(r, 10));
     stdin.write('\r'); // enter
     await new Promise((r) => setTimeout(r, 10));
     expect(lastFrame()).toMatch(/claude|auto-claude/i);
     expect(lastFrame()).toContain('How should plugins be installed?');
   }, 15000);
+
+  it('pick-one selection deselects siblings', async () => {
+    const catalog: Catalog = {
+      version: 2, updatedAt: '2026-05-05',
+      groups: [{
+        id: 'memory', name: 'Memory backend', kind: 'pick-one',
+        items: [
+          { id: 'a', name: 'A', description: '', kind: 'tool', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' }, uninstall: { command: 'true' } },
+          { id: 'b', name: 'B', description: '', kind: 'tool', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' }, uninstall: { command: 'true' } },
+        ],
+      }],
+    };
+    let received: InstallPlan | null = null;
+    const { stdin } = render(
+      <App
+        catalog={catalog}
+        initialStates={[{ itemId: 'a', installed: false }, { itemId: 'b', installed: false }]}
+        repoRoot={null}
+        runInstall={async (plan) => { received = plan; }}
+        onComplete={() => {}}
+      />,
+    );
+    stdin.write(' ');         // select a
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write('\x1b[B');  // down
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write(' ');         // select b (should deselect a)
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write('\r');        // enter -> confirm
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write('\r');        // enter -> run
+    await new Promise((r) => setTimeout(r, 100));
+    expect((received as InstallPlan | null)?.selected.map((i: CatalogItem) => i.id)).toEqual(['b']);
+  });
+
+  it('auto-swap: selecting B in same group when A is installed queues A for uninstall', async () => {
+    const catalog: Catalog = {
+      version: 2, updatedAt: '2026-05-05',
+      groups: [{
+        id: 'memory', name: 'Memory backend', kind: 'pick-one',
+        items: [
+          { id: 'a', name: 'A', description: '', kind: 'tool', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' }, uninstall: { command: 'true' } },
+          { id: 'b', name: 'B', description: '', kind: 'tool', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' }, uninstall: { command: 'true' } },
+        ],
+      }],
+    };
+    let received: InstallPlan | null = null;
+    const { stdin } = render(
+      <App
+        catalog={catalog}
+        initialStates={[{ itemId: 'a', installed: true }, { itemId: 'b', installed: false }]}
+        repoRoot={null}
+        runInstall={async (plan) => { received = plan; }}
+        onComplete={() => {}}
+      />,
+    );
+    stdin.write('\x1b[B');  // down to b
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write(' ');         // select b
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write('\r');        // enter -> confirm
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write('\r');        // enter -> run
+    await new Promise((r) => setTimeout(r, 100));
+    const plan = received as InstallPlan | null;
+    expect(plan?.selected.map((i: CatalogItem) => i.id)).toEqual(['b']);
+    expect(plan?.uninstall?.map((i: CatalogItem) => i.id)).toEqual(['a']);
+  });
 });

@@ -5,6 +5,7 @@ import { executeInstall } from '../engine/executor.js';
 import { orderForInstall } from '../engine/ordering.js';
 import { printHeader } from '../ui/Header.js';
 import { GLYPHS, paint } from '../ui/theme.js';
+import { flattenItems } from '../catalog/groups.js';
 
 export interface RunDefaultListOptions {
   refreshCatalog?: boolean;
@@ -19,30 +20,26 @@ export async function runDefaultList(opts: RunDefaultListOptions = {}): Promise<
     process.exitCode = 2;
     return;
   }
-  const defaults = catalog.items.filter((i) => i.default === true);
+  const defaults = flattenItems(catalog).filter((i) => i.default === true);
   const states = await detectStates(defaults);
   process.stdout.write(printHeader('default --list'));
-  process.stdout.write(renderDefaultList(defaults, states));
+  process.stdout.write(renderDefaultList(catalog, states));
 }
 
-export function renderDefaultList(items: CatalogItem[], states: InstallState[]): string {
+export function renderDefaultList(catalog: import('../types.js').Catalog, states: InstallState[]): string {
   const stateById = new Map(states.map((s) => [s.itemId, s]));
-  const tools   = items.filter((i) => i.kind === 'tool');
-  const plugins = items.filter((i) => i.kind === 'plugin');
-
   const lines: string[] = [];
-  if (tools.length > 0) {
-    lines.push(paint('Default tools:', 'brand'));
-    for (const it of tools) lines.push(formatRow(it, stateById.get(it.id)));
-    lines.push('');
+  let any = false;
+  for (const g of catalog.groups) {
+    const defaults = g.items.filter((i) => i.default === true);
+    if (defaults.length === 0) continue;
+    any = true;
+    if (lines.length > 0) lines.push('');
+    lines.push(paint(`${g.name}:`, 'brand'));
+    for (const it of defaults) lines.push(formatRow(it, stateById.get(it.id)));
   }
-  if (plugins.length > 0) {
-    lines.push(paint('Default plugins:', 'brand'));
-    for (const it of plugins) lines.push(formatRow(it, stateById.get(it.id)));
-    lines.push('');
-  }
-  if (lines.length === 0) lines.push('No items are flagged as defaults.', '');
-  return lines.join('\n');
+  if (!any) lines.push('No items are flagged as defaults.');
+  return lines.join('\n') + '\n';
 }
 
 function formatRow(item: CatalogItem, state: InstallState | undefined): string {
@@ -140,7 +137,7 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
     return;
   }
 
-  const defaults = catalog.items.filter((i) => i.default === true);
+  const defaults = flattenItems(catalog).filter((i) => i.default === true);
 
   process.stdout.write(printHeader('default'));
 

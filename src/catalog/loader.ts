@@ -3,7 +3,7 @@ import type { Catalog } from '../types.js';
 import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import bundledJson from '../../catalog.json' with { type: 'json' };
+import bundledJson from './bundled.json' with { type: 'json' };
 
 const REMOTE_URL = 'https://raw.githubusercontent.com/<owner>/auto-claude/main/catalog.json';
 const FETCH_TIMEOUT_MS = 5000;
