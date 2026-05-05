@@ -18,11 +18,16 @@ const PostInstallActionSchema = z.object({
   interactive: z.boolean().optional(),
 });
 
-export const CatalogItemSchema = z.object({
+const McpServerSchema = z.object({
+  command: z.string().min(1),
+  args: z.array(z.string()).optional(),
+  env: z.record(z.string(), z.string()).optional(),
+});
+
+const ShellItemBase = {
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string(),
-  kind: z.enum(['tool', 'plugin']),
   homepage: z.string().url().optional(),
   defaultScope: z.enum(['global', 'project']),
   detect: DetectSpecSchema,
@@ -31,7 +36,26 @@ export const CatalogItemSchema = z.object({
   update: CommandSpecSchema.optional(),
   postInstall: z.array(PostInstallActionSchema).optional(),
   default: z.boolean().optional(),
+};
+
+const ToolItemSchema = z.object({ ...ShellItemBase, kind: z.literal('tool') });
+const PluginItemSchema = z.object({ ...ShellItemBase, kind: z.literal('plugin') });
+const McpItemSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string(),
+  homepage: z.string().url().optional(),
+  kind: z.literal('mcp'),
+  mcpKey: z.string().min(1),
+  mcpServer: McpServerSchema,
+  default: z.boolean().optional(),
 });
+
+export const CatalogItemSchema = z.discriminatedUnion('kind', [
+  ToolItemSchema,
+  PluginItemSchema,
+  McpItemSchema,
+]);
 
 export const CatalogGroupSchema = z.object({
   id: z.string().min(1),
@@ -48,6 +72,7 @@ export const CatalogSchema = z.object({
 }).superRefine((cat, ctx) => {
   const seenGroups = new Set<string>();
   const seenItems = new Set<string>();
+  const seenMcpKeys = new Set<string>();
   for (const group of cat.groups) {
     if (seenGroups.has(group.id)) {
       ctx.addIssue({ code: 'custom', message: `duplicate group id: ${group.id}` });
@@ -61,6 +86,12 @@ export const CatalogSchema = z.object({
       }
       seenItems.add(item.id);
       if (item.default) defaultCount++;
+      if (item.kind === 'mcp') {
+        if (seenMcpKeys.has(item.mcpKey)) {
+          ctx.addIssue({ code: 'custom', message: `duplicate mcpKey: ${item.mcpKey}` });
+        }
+        seenMcpKeys.add(item.mcpKey);
+      }
     }
     if (group.kind === 'pick-one' && defaultCount > 1) {
       ctx.addIssue({ code: 'custom', message: `at most one default:true allowed in pick-one group "${group.id}"` });
