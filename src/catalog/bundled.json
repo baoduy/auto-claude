@@ -150,7 +150,7 @@
     },
     {
       "id": "snip",
-      "name": "Snip",
+      "name": "snip",
       "description": "Visual mode for Claude Code — render diagrams, annotate previews, OCR screenshots (macOS via Homebrew cask)",
       "kind": "tool",
       "homepage": "https://github.com/rixinhahaha/snip",
@@ -160,7 +160,7 @@
       "uninstall": { "command": "brew uninstall --cask snip" },
       "update":    { "command": "brew upgrade --cask snip" },
       "postInstall": [
-        { "type": "shell", "value": "snip setup", "label": "Wiring Snip into Claude Code" }
+        { "type": "shell", "value": "snip setup", "label": "Wiring snip into Claude Code" }
       ]
     },
     {

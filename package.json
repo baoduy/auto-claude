@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "start": "node dist/cli.js",
+    "start": "pnpm run build && node dist/cli.js",
     "update": "npx npm-check-updates -u && pnpm install"
   },
   "dependencies": {

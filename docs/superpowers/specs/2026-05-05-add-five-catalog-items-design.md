@@ -1,4 +1,4 @@
-# Add five catalog items: context-mode, Snip, codeburn, spec-kit, OpenSpec
+# Add five catalog items: context-mode, snip, codeburn, spec-kit, OpenSpec
 
 **Date:** 2026-05-05
 **Status:** Approved (ready to implement)
@@ -12,7 +12,7 @@ Extend `src/catalog/bundled.json` with five new entries — three tools and two 
 Each item is a popular Claude-Code-adjacent utility the user wants surfaced through `npx auto-claude`:
 
 - **context-mode** — MCP server for context window optimization (~98% reduction)
-- **Snip** — visual mode (diagram rendering, annotated previews) for Claude Code
+- **snip** — visual mode (diagram rendering, annotated previews) for Claude Code
 - **codeburn** — TUI dashboard for cross-tool token/cost observability
 - **spec-kit** — GitHub's Spec-Driven Development toolkit (`/speckit.*` commands)
 - **OpenSpec** — alternate spec-driven framework (`/opsx:*` commands)
@@ -24,7 +24,7 @@ Each item is a popular Claude-Code-adjacent utility the user wants surfaced thro
 | Item | `kind` | `defaultScope` | Rationale |
 |---|---|---|---|
 | context-mode | `tool` | `global` | User preference; install via npm + `claude mcp add` rather than the marketplace plugin path |
-| Snip | `tool` | `global` | Standalone macOS app installed via Homebrew cask |
+| snip | `tool` | `global` | Standalone macOS app installed via Homebrew cask |
 | codeburn | `tool` | `global` | Standalone npm CLI |
 | spec-kit | `plugin` | `project` | Behaves as a per-repo plugin (drops `/speckit.*` slash commands into the repo via `specify init`), even though distribution is `uv tool install` |
 | OpenSpec | `plugin` | `project` | Same pattern: per-repo plugin behavior via `openspec init`, distributed as a global npm CLI |
@@ -52,12 +52,12 @@ Each item is a popular Claude-Code-adjacent utility the user wants surfaced thro
 }
 ```
 
-### Snip (tool)
+### snip (tool)
 
 ```json
 {
   "id": "snip",
-  "name": "Snip",
+  "name": "snip",
   "description": "Visual mode for Claude Code — render diagrams, annotate previews, OCR screenshots",
   "kind": "tool",
   "homepage": "https://github.com/rixinhahaha/snip",
@@ -67,7 +67,7 @@ Each item is a popular Claude-Code-adjacent utility the user wants surfaced thro
   "uninstall": { "command": "brew uninstall --cask snip" },
   "update":    { "command": "brew upgrade --cask snip" },
   "postInstall": [
-    { "type": "shell", "value": "snip setup", "label": "Wiring Snip into Claude Code" }
+    { "type": "shell", "value": "snip setup", "label": "Wiring snip into Claude Code" }
   ]
 }
 ```
@@ -146,5 +146,5 @@ No source code changes. No new tests required (catalog validation is generic).
 ## Risks / Out of scope
 
 - **No verification that the install commands actually work on a clean machine** — same risk profile as every other catalog entry. Smoke-testing belongs to the user installing each.
-- **Linux Snip users** are not served by the `brew --cask` install path. Out of scope; can be addressed later by branching `install.command` per platform if needed.
+- **Linux snip users** are not served by the `brew --cask` install path. Out of scope; can be addressed later by branching `install.command` per platform if needed.
 - **`uv` prerequisite for spec-kit** — not auto-installed; user-facing failure if missing.
