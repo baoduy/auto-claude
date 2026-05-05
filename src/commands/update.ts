@@ -4,6 +4,7 @@ import { detectStates } from '../engine/detect.js';
 import type { CatalogItem, InstallState } from '../types.js';
 import { printHeader } from '../ui/Header.js';
 import { GLYPHS, paint } from '../ui/theme.js';
+import { flattenItems } from '../catalog/groups.js';
 
 export function planUpdate(items: CatalogItem[], states: InstallState[], only?: string): CatalogItem[] {
   const installed = new Set(states.filter((s) => s.installed).map((s) => s.itemId));
@@ -14,8 +15,8 @@ export function planUpdate(items: CatalogItem[], states: InstallState[], only?: 
 
 export async function runUpdate(opts: { only?: string } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps());
-  const states = await detectStates(catalog.items);
-  const targets = planUpdate(catalog.items, states, opts.only);
+  const states = await detectStates(flattenItems(catalog));
+  const targets = planUpdate(flattenItems(catalog), states, opts.only);
   process.stdout.write(printHeader('update'));
   if (targets.length === 0) { console.log('Nothing to update.'); return; }
   for (const t of targets) {

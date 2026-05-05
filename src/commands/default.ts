@@ -5,6 +5,7 @@ import { executeInstall } from '../engine/executor.js';
 import { orderForInstall } from '../engine/ordering.js';
 import { printHeader } from '../ui/Header.js';
 import { GLYPHS, paint } from '../ui/theme.js';
+import { flattenItems } from '../catalog/groups.js';
 
 export interface RunDefaultListOptions {
   refreshCatalog?: boolean;
@@ -19,7 +20,7 @@ export async function runDefaultList(opts: RunDefaultListOptions = {}): Promise<
     process.exitCode = 2;
     return;
   }
-  const defaults = catalog.items.filter((i) => i.default === true);
+  const defaults = flattenItems(catalog).filter((i) => i.default === true);
   const states = await detectStates(defaults);
   process.stdout.write(printHeader('default --list'));
   process.stdout.write(renderDefaultList(defaults, states));
@@ -140,7 +141,7 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
     return;
   }
 
-  const defaults = catalog.items.filter((i) => i.default === true);
+  const defaults = flattenItems(catalog).filter((i) => i.default === true);
 
   process.stdout.write(printHeader('default'));
 

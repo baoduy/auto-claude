@@ -4,6 +4,7 @@ import { detectStates } from '../engine/detect.js';
 import type { CatalogItem, InstallState } from '../types.js';
 import { printHeader } from '../ui/Header.js';
 import { GLYPHS, paint } from '../ui/theme.js';
+import { flattenItems } from '../catalog/groups.js';
 
 export function planUninstall(items: CatalogItem[], states: InstallState[]): CatalogItem[] {
   const installed = new Set(states.filter((s) => s.installed).map((s) => s.itemId));
@@ -12,8 +13,8 @@ export function planUninstall(items: CatalogItem[], states: InstallState[]): Cat
 
 export async function runRemove(opts: { yes?: boolean } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps());
-  const states = await detectStates(catalog.items);
-  const targets = planUninstall(catalog.items, states);
+  const states = await detectStates(flattenItems(catalog));
+  const targets = planUninstall(flattenItems(catalog), states);
   process.stdout.write(printHeader('remove'));
   if (targets.length === 0) {
     console.log('Nothing to uninstall.');
