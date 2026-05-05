@@ -12,6 +12,7 @@ export const COLORS = {
   fail: 'red',
   warn: 'yellow',
   info: 'blue',
+  group: 'blue',
   cursor: 'cyan',
 } as const;
 
@@ -52,6 +53,7 @@ export type PaintColor =
   | 'fail'
   | 'warn'
   | 'info'
+  | 'group'
   | 'cursor'
   | 'dim'
   | 'bold';
@@ -64,6 +66,7 @@ const ANSI: Record<PaintColor, string> = {
   fail: '\x1b[31m',
   warn: '\x1b[33m',
   info: '\x1b[34m',
+  group: '\x1b[34m',
   cursor: '\x1b[36m',
   dim: '\x1b[2m',
   bold: '\x1b[1m',
