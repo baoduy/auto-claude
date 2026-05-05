@@ -4,34 +4,82 @@ import type { Catalog, InstallState } from '../../src/types.js';
 
 const catalog: Catalog = {
   version: 2,
-  updatedAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-05-05',
   groups: [
     {
-      id: 'test-group',
-      name: 'Test Group',
-      description: '',
+      id: 'memory',
+      name: 'Memory backend',
+      kind: 'pick-one',
+      items: [
+        {
+          id: 'a',
+          name: 'A',
+          description: '',
+          kind: 'tool',
+          defaultScope: 'global',
+          detect: { command: 't' },
+          install: { command: 't' },
+        },
+        {
+          id: 'b',
+          name: 'B',
+          description: '',
+          kind: 'tool',
+          defaultScope: 'global',
+          detect: { command: 't' },
+          install: { command: 't' },
+        },
+      ],
+    },
+    {
+      id: 'docs',
+      name: 'Documentation providers',
       kind: 'pick-many',
       items: [
-        { id: 'a', name: 'a', description: '', kind: 'tool', defaultScope: 'global',
-          detect: { command: 'a -v' }, install: { command: '' } },
-        { id: 'b', name: 'b', description: '', kind: 'plugin', defaultScope: 'global',
-          detect: { command: 'b -v' }, install: { command: '' } },
+        {
+          id: 'c',
+          name: 'C',
+          description: '',
+          kind: 'plugin',
+          defaultScope: 'global',
+          detect: { command: 't' },
+          install: { command: 't' },
+        },
       ],
     },
   ],
 };
-const states: InstallState[] = [
-  { itemId: 'a', installed: true, version: 'a 1.0.0' },
-  { itemId: 'b', installed: false },
-];
 
 describe('renderStatus', () => {
-  it('renders one line per item with badge and version', () => {
+  it('renders a group header per group', () => {
+    const states: InstallState[] = [
+      { itemId: 'a', installed: true },
+      { itemId: 'b', installed: false },
+      { itemId: 'c', installed: false },
+    ];
     const out = renderStatus(catalog, states);
-    expect(out).toContain('a');
-    expect(out).toContain('installed');
-    expect(out).toContain('a 1.0.0');
-    expect(out).toContain('b');
-    expect(out).toContain('missing');
+    expect(out).toMatch(/Memory backend \(pick-one\)/);
+    expect(out).toMatch(/Documentation providers/);
+    const docsLine = out.split('\n').find((l) => l.includes('Documentation providers'))!;
+    expect(docsLine).not.toMatch(/pick-/);
+  });
+
+  it('lists each item under its group header', () => {
+    const states: InstallState[] = [
+      { itemId: 'a', installed: true },
+      { itemId: 'b', installed: false },
+      { itemId: 'c', installed: false },
+    ];
+    const out = renderStatus(catalog, states);
+    const lines = out.split('\n');
+    const memHeader = lines.findIndex((l) => l.includes('Memory backend'));
+    const docsHeader = lines.findIndex((l) => l.includes('Documentation providers'));
+    expect(memHeader).toBeGreaterThanOrEqual(0);
+    expect(docsHeader).toBeGreaterThan(memHeader);
+    const aIdx = lines.findIndex((l) => l.includes('A'));
+    const cIdx = lines.findIndex((l) => l.includes('C'));
+    expect(aIdx).toBeGreaterThan(memHeader);
+    expect(aIdx).toBeLessThan(docsHeader);
+    expect(cIdx).toBeGreaterThan(docsHeader);
   });
 });
