@@ -24,13 +24,24 @@ Pick the tools and plugins you want from the checklist; auto-claude installs the
 
 The catalog is fetched at runtime; the bundled fallback ships with these:
 
-- **claude-mem** — persistent cross-session memory plugin
+**Tools**
 - **rtk** — token-optimized CLI proxy (also runs `rtk init -g` in the repo)
-- **superpowers** — Claude Code skills framework plugin
-- **claude-code-setup** — automation recommender plugin
+- **graphify** — knowledge-graph builder for your codebase, surfaced via `/graphify`
+- **gitnexus** — code-intelligence MCP server; indexes your repo into a graph
+
+**Plugins**
+- **claude-mem** — persistent cross-session memory
+- **superpowers** — skills framework
+- **claude-code-setup** — automation recommender
+- **microsoft-docs** — Microsoft / Azure / .NET docs and samples
+- **context7** — version-specific library docs pulled into LLM context
+- **plugin-dev** — toolkit for developing Claude Code plugins
+- **drunk-app** — assistant for configuring drunk-app Helm chart deployments
+- **dknet-minimal** — vertical-slice features on DKNet.Minimal.Template (.NET 10)
 
 ## Requirements
 
 - Node.js 20+
 - `claude` CLI (for plugin install)
 - `git` (for project-scoped operations)
+- `pip` (for graphify) and Homebrew (for rtk on macOS)

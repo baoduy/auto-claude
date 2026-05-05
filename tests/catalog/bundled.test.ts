@@ -10,10 +10,22 @@ describe('bundled catalog', () => {
     expect(() => CatalogSchema.parse(json)).not.toThrow();
   });
 
-  it('contains the four required items', () => {
+  it('contains the expected required items', () => {
     const path = fileURLToPath(new URL('../../src/catalog/bundled.json', import.meta.url));
     const json = JSON.parse(readFileSync(path, 'utf-8'));
     const ids = json.items.map((i: { id: string }) => i.id).sort();
-    expect(ids).toEqual(['claude-code-setup', 'claude-mem', 'rtk', 'superpowers']);
+    expect(ids).toEqual([
+      'claude-code-setup',
+      'claude-mem',
+      'context7',
+      'dknet-minimal',
+      'drunk-app',
+      'gitnexus',
+      'graphify',
+      'microsoft-docs',
+      'plugin-dev',
+      'rtk',
+      'superpowers',
+    ]);
   });
 });
