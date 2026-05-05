@@ -35,7 +35,7 @@ export function renderDefaultList(catalog: import('../types.js').Catalog, states
     if (defaults.length === 0) continue;
     any = true;
     if (lines.length > 0) lines.push('');
-    lines.push(paint(`${g.name}:`, 'brand'));
+    lines.push(paint(`${g.name}:`, 'group'));
     for (const it of defaults) lines.push(formatRow(it, stateById.get(it.id)));
   }
   if (!any) lines.push('No items are flagged as defaults.');

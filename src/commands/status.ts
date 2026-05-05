@@ -11,7 +11,7 @@ export function renderStatus(catalog: import('../types.js').Catalog, states: Ins
   for (const g of catalog.groups) {
     if (lines.length > 0) lines.push('');
     const headerSuffix = g.kind === 'pick-one' ? ' (pick-one)' : '';
-    lines.push(paint(`${g.name}${headerSuffix}:`, 'brand'));
+    lines.push(paint(`${g.name}${headerSuffix}:`, 'group'));
     for (const item of g.items) {
       const s = byId.get(item.id);
       const badge = s?.installed
