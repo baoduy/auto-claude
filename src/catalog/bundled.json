@@ -155,7 +155,7 @@
       "kind": "tool",
       "homepage": "https://github.com/rixinhahaha/snip",
       "defaultScope": "global",
-      "detect":    { "command": "snip --version" },
+      "detect":    { "command": "snip --help" },
       "install":   { "command": "brew install --cask rixinhahaha/snip/snip" },
       "uninstall": { "command": "brew uninstall --cask snip" },
       "update":    { "command": "brew upgrade --cask snip" },
