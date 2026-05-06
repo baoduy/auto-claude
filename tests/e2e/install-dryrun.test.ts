@@ -32,6 +32,7 @@ describe('e2e: install dry-run for all bundled items, project scope', () => {
       'claude mcp add gitnexus -- npx -y gitnexus@latest mcp',
       'npx gitnexus analyze',
       // plugins, in catalog order
+      'claude plugin marketplace add JuliusBrussee/caveman && claude plugin install caveman@caveman',
       'claude plugin install claude-mem@thedotmack',
       'claude plugin install superpowers@claude-plugins-official',
       'claude plugin install claude-code-setup@claude-plugins-official',
