@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { flattenItems, groupByItemId, dominantKind, pageOf, activeKinds, groupsForKind } from '../../src/catalog/groups.js';
+import { flattenItems, groupByItemId, dominantKind, pageOf, activeKinds, groupsForKind, findDefaultConflicts } from '../../src/catalog/groups.js';
 import type { Catalog, CatalogGroup, CatalogItem } from '../../src/types.js';
 
 const tool = (id: string): CatalogItem => ({
@@ -121,5 +121,64 @@ describe('groupsForKind', () => {
     };
     expect(groupsForKind(c, 'tool').map(g => g.id)).toEqual(['g1']);
     expect(groupsForKind(c, 'plugin').map(g => g.id)).toEqual(['g2', 'g3']);
+  });
+});
+
+describe('findDefaultConflicts', () => {
+  const mkTool = (id: string, isDefault = false, withUninstall = true): CatalogItem => ({
+    id, name: id, description: '', kind: 'tool', defaultScope: 'global',
+    detect: { command: 'true' }, install: { command: `install-${id}` },
+    ...(withUninstall ? { uninstall: { command: `uninstall-${id}` } } : {}),
+    ...(isDefault ? { default: true } : {}),
+  });
+
+  const cat = (groups: CatalogGroup[]): Catalog => ({ version: 2, updatedAt: '2026-05-07', groups });
+
+  it('returns no conflict when only the default sibling is installed', () => {
+    const c = cat([
+      group('mem', [mkTool('a', true), mkTool('b')], { kind: 'pick-one' }),
+    ]);
+    expect(findDefaultConflicts(c, new Set(['a']))).toEqual([]);
+  });
+
+  it('returns a conflict when only a drifted sibling is installed', () => {
+    const c = cat([
+      group('mem', [mkTool('a', true), mkTool('b')], { kind: 'pick-one' }),
+    ]);
+    const out = findDefaultConflicts(c, new Set(['b']));
+    expect(out).toHaveLength(1);
+    expect(out[0]!.groupId).toBe('mem');
+    expect(out[0]!.defaultItem.id).toBe('a');
+    expect(out[0]!.driftedSiblings.map((s) => s.id)).toEqual(['b']);
+  });
+
+  it('returns a conflict when default and a drifted sibling are both installed', () => {
+    const c = cat([
+      group('mem', [mkTool('a', true), mkTool('b'), mkTool('c')], { kind: 'pick-one' }),
+    ]);
+    const out = findDefaultConflicts(c, new Set(['a', 'b']));
+    expect(out).toHaveLength(1);
+    expect(out[0]!.driftedSiblings.map((s) => s.id)).toEqual(['b']);
+  });
+
+  it('skips pick-one groups with no default flag', () => {
+    const c = cat([
+      group('mem', [mkTool('a'), mkTool('b')], { kind: 'pick-one' }),
+    ]);
+    expect(findDefaultConflicts(c, new Set(['a', 'b']))).toEqual([]);
+  });
+
+  it('skips pick-one groups with multiple default flags (ambiguous)', () => {
+    const c = cat([
+      group('mem', [mkTool('a', true), mkTool('b', true)], { kind: 'pick-one' }),
+    ]);
+    expect(findDefaultConflicts(c, new Set(['a', 'b']))).toEqual([]);
+  });
+
+  it('ignores non-pick-one groups even when multiple members are installed', () => {
+    const c = cat([
+      group('extras', [mkTool('a', true), mkTool('b')], { kind: 'pick-many' }),
+    ]);
+    expect(findDefaultConflicts(c, new Set(['a', 'b']))).toEqual([]);
   });
 });
