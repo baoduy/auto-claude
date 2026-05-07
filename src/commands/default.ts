@@ -68,6 +68,7 @@ export interface RunDefaultInstallDeps {
   log: (msg: string) => void;
   err: (msg: string) => void;
   onEvent: (e: EngineEvent) => void;
+  dryRun?: boolean;
 }
 
 export interface DefaultInstallResult {
@@ -117,10 +118,11 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
         {
           run: deps.run,
           onEvent: wrappedOnEvent,
-          dryRun: false,
+          dryRun: !!deps.dryRun,
+          record: deps.dryRun ? (cmd) => deps.log(paint(`  $ ${cmd}`, 'dim')) : undefined,
         },
       );
-      deps.log(paint(`${GLYPHS.ok} ${item.id}`, 'ok'));
+      deps.log(paint(`${GLYPHS.ok} ${item.id}${deps.dryRun ? ' (dry-run)' : ''}`, 'ok'));
       result.ok++;
     } catch (e) {
       deps.err(paint(`${GLYPHS.fail} ${item.id}: ${(e as Error).message}`, 'fail'));
@@ -129,12 +131,14 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
   }
 
   const summaryColor = result.failed > 0 ? 'fail' : 'ok';
-  deps.log(paint(`default: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped`, summaryColor));
+  const dryNote = deps.dryRun ? ' [dry-run]' : '';
+  deps.log(paint(`default${dryNote}: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped`, summaryColor));
   return result;
 }
 
 export interface RunDefaultOptions {
   refreshCatalog?: boolean;
+  dryRun?: boolean;
 }
 
 export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
@@ -149,7 +153,7 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
 
   const defaults = flattenItems(catalog).filter((i) => i.default === true);
 
-  process.stdout.write(printHeader('default'));
+  process.stdout.write(printHeader(opts.dryRun ? 'default --dry-run' : 'default'));
 
   const repoRoot = await findRepoRoot();
 
@@ -165,6 +169,7 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
     log: (m) => process.stdout.write(m + '\n'),
     err: (m) => process.stderr.write(m + '\n'),
     onEvent: () => { /* progress already logged via per-item log() calls */ },
+    dryRun: !!opts.dryRun,
   });
 
   if (result.failed > 0) process.exitCode = 1;

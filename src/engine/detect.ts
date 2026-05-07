@@ -1,4 +1,4 @@
-import type { CatalogItem, InstallState } from '../types.js';
+import type { CatalogItem, DetectSpec, InstallState, NpmDetectSpec } from '../types.js';
 import { execa } from 'execa';
 import { readMcpConfig, hasMcpServer, mcpConfigPath } from './mcp-config.js';
 
@@ -6,14 +6,60 @@ export interface ShellRunner {
   (cmdline: string): Promise<{ exitCode: number; stdout: string; stderr: string }>;
 }
 
+/** Per-detect command timeout in ms. Kills hung probes (e.g. tools that
+ *  open a daemon on `--version`). 8s is generous for legitimate CLIs. */
+export const DETECT_TIMEOUT_MS = 8000;
+
+/** Shell runner with no timeout. Used for install/uninstall commands which
+ *  may legitimately take minutes (npm install, brew install, etc.). */
 export const realShellRunner: ShellRunner = async (cmdline) => {
   const r = await execa(cmdline, { shell: true, reject: false });
   return { exitCode: r.exitCode ?? 1, stdout: r.stdout, stderr: r.stderr };
 };
 
+/** Shell runner with a short timeout. Used only for detection probes so a
+ *  misbehaving `--version` (e.g. one that opens a daemon) cannot hang the CLI. */
+export const detectShellRunner: ShellRunner = async (cmdline) => {
+  const r = await execa(cmdline, {
+    shell: true,
+    reject: false,
+    timeout: DETECT_TIMEOUT_MS,
+    killSignal: 'SIGKILL',
+  });
+  if (r.timedOut) return { exitCode: 124, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+  return { exitCode: r.exitCode ?? 1, stdout: r.stdout, stderr: r.stderr };
+};
+
+function isShellDetect(d: DetectSpec): d is Exclude<DetectSpec, NpmDetectSpec> {
+  return d.kind !== 'npm';
+}
+
+async function detectViaNpm(
+  spec: NpmDetectSpec,
+  run: ShellRunner,
+): Promise<{ installed: boolean; version?: string }> {
+  const npmCmd = `npm ls -g ${spec.package} --depth=0 --json`;
+  const r = await run(npmCmd).catch(() => null);
+  if (r && r.exitCode === 0) {
+    const v = parseNpmLsVersion(r.stdout, spec.package);
+    return { installed: true, version: v };
+  }
+  return { installed: false };
+}
+
+function parseNpmLsVersion(stdout: string, pkg: string): string | undefined {
+  try {
+    const j = JSON.parse(stdout);
+    const v = j?.dependencies?.[pkg]?.version;
+    return typeof v === 'string' ? `${pkg}@${v}` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function detectStates(
   items: CatalogItem[],
-  run: ShellRunner = realShellRunner,
+  run: ShellRunner = detectShellRunner,
   repoRoot: string | null = null,
 ): Promise<InstallState[]> {
   // For mcp items we look in both possible config files (project .mcp.json
@@ -38,10 +84,16 @@ export async function detectStates(
       return { itemId: item.id, installed: mcpKeys.has(item.mcpKey) };
     }
     try {
-      const r = await run(item.detect.command);
+      if (item.detect.kind === 'npm') {
+        const res = await detectViaNpm(item.detect, run);
+        return { itemId: item.id, installed: res.installed, version: res.version };
+      }
+      const shellDetect = item.detect;
+      if (!isShellDetect(shellDetect)) return { itemId: item.id, installed: false };
+      const r = await run(shellDetect.command);
       if (r.exitCode !== 0) return { itemId: item.id, installed: false };
-      if (item.detect.versionMatch) {
-        const re = new RegExp(item.detect.versionMatch);
+      if (shellDetect.versionMatch) {
+        const re = new RegExp(shellDetect.versionMatch);
         const match = re.test(r.stdout);
         return { itemId: item.id, installed: match, version: match ? extractFirstLine(r.stdout) : undefined };
       }

@@ -16,11 +16,23 @@ export interface CommandSpec {
   cwd?: Cwd;
 }
 
-export interface DetectSpec {
+/** Shell-based detect: run a command, optionally regex its stdout. */
+export interface ShellDetectSpec {
+  kind?: 'shell';
   command: string;
   /** Regex applied to stdout. If absent, exit-code 0 == installed. */
   versionMatch?: string;
 }
+
+/** npm-based detect: probe `<pm> ls -g <package>` (npm preferred, pnpm fallback).
+ *  Avoids running the package's own binary, which can hang. */
+export interface NpmDetectSpec {
+  kind: 'npm';
+  /** Full npm package name (e.g. "@fission-ai/openspec"). */
+  package: string;
+}
+
+export type DetectSpec = ShellDetectSpec | NpmDetectSpec;
 
 export interface McpServerConfig {
   command: string;

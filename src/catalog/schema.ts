@@ -5,10 +5,18 @@ const CommandSpecSchema = z.object({
   cwd: z.enum(['repo-root', 'cwd']).optional(),
 });
 
-const DetectSpecSchema = z.object({
+const ShellDetectSpecSchema = z.object({
+  kind: z.literal('shell').optional(),
   command: z.string().min(1),
   versionMatch: z.string().optional(),
 });
+
+const NpmDetectSpecSchema = z.object({
+  kind: z.literal('npm'),
+  package: z.string().min(1),
+});
+
+const DetectSpecSchema = z.union([ShellDetectSpecSchema, NpmDetectSpecSchema]);
 
 const PostInstallActionSchema = z.object({
   type: z.enum(['shell', 'claude-prompt']),

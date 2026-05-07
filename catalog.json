@@ -15,16 +15,34 @@
           "kind": "plugin",
           "homepage": "https://github.com/thedotmack/claude-mem",
           "defaultScope": "global",
-          "default": true,
           "detect": {
             "command": "claude plugin list",
             "versionMatch": "claude-mem"
           },
           "install": {
-            "command": "claude plugin install claude-mem@thedotmack"
+            "command": "npx claude-mem install"
           },
           "uninstall": {
-            "command": "claude plugin uninstall claude-mem"
+            "command": "npx claude-mem uninstall"
+          }
+        },
+        {
+          "id": "cavemem",
+          "name": "cavemem",
+          "default": true,
+          "description": "Cross-agent persistent memory via compressed local SQLite + MCP",
+          "kind": "plugin",
+          "homepage": "https://github.com/JuliusBrussee/cavemem",
+          "defaultScope": "global",
+          "detect": {
+            "kind": "npm",
+            "package": "cavemem"
+          },
+          "install": {
+            "command": "npm install -g cavemem && cavemem install"
+          },
+          "uninstall": {
+            "command": "cavemem uninstall && npm uninstall -g cavemem"
           }
         },
         {
@@ -98,7 +116,8 @@
           "homepage": "https://github.com/Fission-AI/OpenSpec",
           "defaultScope": "project",
           "detect": {
-            "command": "openspec --version"
+            "kind": "npm",
+            "package": "@fission-ai/openspec"
           },
           "install": {
             "command": "npm install -g @fission-ai/openspec@latest"
@@ -135,7 +154,8 @@
           "defaultScope": "project",
           "default": true,
           "detect": {
-            "command": "gitnexus --version"
+            "kind": "npm",
+            "package": "gitnexus"
           },
           "install": {
             "command": "npm install -g gitnexus"
@@ -271,7 +291,8 @@
           "homepage": "https://github.com/mksglu/context-mode",
           "defaultScope": "global",
           "detect": {
-            "command": "context-mode --version"
+            "kind": "npm",
+            "package": "context-mode"
           },
           "install": {
             "command": "npm install -g context-mode"
@@ -298,7 +319,8 @@
           "homepage": "https://github.com/getagentseal/codeburn",
           "defaultScope": "global",
           "detect": {
-            "command": "codeburn --version"
+            "kind": "npm",
+            "package": "codeburn"
           },
           "install": {
             "command": "npm install -g codeburn"
@@ -375,6 +397,25 @@
           },
           "uninstall": {
             "command": "claude plugin uninstall plugin-dev"
+          }
+        },
+        {
+          "id": "caveman",
+          "name": "caveman",
+          "default": true,
+          "description": "Claude plugin that compresses responses to reduce output token usage",
+          "kind": "plugin",
+          "homepage": "https://github.com/JuliusBrussee/caveman",
+          "defaultScope": "global",
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "caveman"
+          },
+          "install": {
+            "command": "claude plugin marketplace add JuliusBrussee/caveman && claude plugin install caveman@caveman"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall caveman"
           }
         },
         {

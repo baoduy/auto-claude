@@ -80,10 +80,11 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
         }
       }
     } else {
+      const cmd = item.uninstall!.command;
       if (opts.dryRun) {
-        opts.record?.(formatShellRecord(item.uninstall!.command, cwd));
+        opts.record?.(formatShellRecord(cmd, cwd));
       } else {
-        const r = await opts.run(item.uninstall!.command, cwd ? { cwd } : undefined);
+        const r = await opts.run(cmd, cwd ? { cwd } : undefined);
         if (r.exitCode !== 0) {
           opts.onEvent({ type: 'item-failure', itemId: item.id, exitCode: r.exitCode, stderrTail: tailStderr(r.stderr) });
           throw new Error(`Uninstall failed for ${item.id} (exit ${r.exitCode})`);
@@ -115,10 +116,11 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
         }
       }
     } else {
+      const cmd = item.install.command;
       if (opts.dryRun) {
-        opts.record?.(formatShellRecord(item.install.command, cwd));
+        opts.record?.(formatShellRecord(cmd, cwd));
       } else {
-        const r = await opts.run(item.install.command, cwd ? { cwd } : undefined);
+        const r = await opts.run(cmd, cwd ? { cwd } : undefined);
         if (r.exitCode !== 0) {
           opts.onEvent({ type: 'item-failure', itemId: item.id, exitCode: r.exitCode, stderrTail: tailStderr(r.stderr) });
           throw new Error(`Install failed for ${item.id} (exit ${r.exitCode})`);

@@ -47,6 +47,34 @@ describe('detectStates', () => {
   });
 });
 
+describe('detectStates with npm-kind detect', () => {
+  const npmItem = (over: Partial<ToolItem> = {}): CatalogItem => ({
+    id: 'cavemem', name: 'cavemem', description: '', kind: 'tool', defaultScope: 'global',
+    detect: { kind: 'npm', package: 'cavemem' },
+    install: { command: 'npm install -g cavemem' },
+    ...over,
+  });
+
+  it('marks installed when `npm ls -g <pkg>` returns json with the package', async () => {
+    const calls: string[] = [];
+    const stdout = JSON.stringify({ dependencies: { cavemem: { version: '1.2.3' } } });
+    const states = await detectStates([npmItem()], async (cmd) => {
+      calls.push(cmd);
+      return { exitCode: 0, stdout, stderr: '' };
+    });
+    expect(states[0]!.installed).toBe(true);
+    expect(states[0]!.version).toBe('cavemem@1.2.3');
+    expect(calls[0]).toBe('npm ls -g cavemem --depth=0 --json');
+  });
+
+  it('reports not installed when npm probe fails', async () => {
+    const states = await detectStates([npmItem()], async () => {
+      return { exitCode: 1, stdout: '', stderr: '' };
+    });
+    expect(states[0]!.installed).toBe(false);
+  });
+});
+
 it('detects mcp items by reading .mcp.json from repoRoot', async () => {
   const repo = mkdtempSync(join(tmpdir(), 'mcp-detect-'));
   try {

@@ -11,6 +11,7 @@ program
   .name('auto-claude')
   .description('Curated installer for Claude Code tools and plugins')
   .version('0.1.0')
+  .enablePositionalOptions()
   .option('--refresh-catalog', 'force re-fetch catalog, ignore cache')
   .option('--dry-run', 'preview actions without modifying the system')
   .action(async (opts) => {
@@ -38,11 +39,12 @@ program.command('default')
   .description('Silently install all catalog items flagged default: true (global scope, non-interactive)')
   .option('--refresh-catalog', 'force re-fetch catalog')
   .option('-l, --list', 'list default items and their installed state, then exit')
+  .option('--dry-run', 'print what would be installed without running anything')
   .action(async (opts) => {
     if (opts.list) {
       await runDefaultList({ refreshCatalog: !!opts.refreshCatalog });
     } else {
-      await runDefault({ refreshCatalog: !!opts.refreshCatalog });
+      await runDefault({ refreshCatalog: !!opts.refreshCatalog, dryRun: !!opts.dryRun });
     }
   });
 
