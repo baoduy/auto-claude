@@ -24,6 +24,18 @@ function mkItem(id: string, kind: 'tool' | 'plugin' = 'tool'): CatalogItem {
   };
 }
 
+function mkSibling(id: string, withUninstall = true): CatalogItem {
+  return {
+    id, name: id, description: '', kind: 'tool', defaultScope: 'global',
+    detect: { command: `${id} -v` }, install: { command: `install-${id}` },
+    ...(withUninstall ? { uninstall: { command: `uninstall-${id}` } } : {}),
+  };
+}
+
+function mkCatalog(groups: import('../../src/types.js').CatalogGroup[]): Catalog {
+  return { version: 2, updatedAt: '2026-05-07', groups };
+}
+
 describe('runDefaultInstall', () => {
   it('skips already-installed items and reports success', async () => {
     const events: EngineEvent[] = [];
@@ -95,6 +107,73 @@ describe('runDefaultInstall', () => {
     expect(logs.some((l) => /post-install Claude prompt skipped/.test(l))).toBe(true);
   });
 
+  it('uninstalls a drifted pick-one sibling before installing the default', async () => {
+    const a = mkItem('a'); // default: true
+    const b = mkSibling('b', true); // drifted, has uninstall
+    const catalog: Catalog = mkCatalog([
+      { id: 'mem', name: 'Memory', kind: 'pick-one', items: [a, b] },
+    ]);
+    const calls: string[] = [];
+    const result = await runDefaultInstall({
+      items: [a],
+      catalog,
+      detect: async () => [
+        { itemId: 'a', installed: false },
+        { itemId: 'b', installed: true },
+      ],
+      run: async (cmd) => { calls.push(cmd); return { exitCode: 0, stdout: '', stderr: '' }; },
+      log: () => {},
+      err: () => {},
+      onEvent: () => {},
+    });
+    expect(calls).toEqual(['uninstall-b', 'install-a']);
+    expect(result.ok).toBe(1);
+    expect(result.failed).toBe(0);
+    expect(result.conflicts).toBe(0);
+  });
+
+  it('initializes the conflicts counter at zero on a clean run', async () => {
+    const result = await runDefaultInstall({
+      items: [mkItem('rtk')],
+      detect: async () => [{ itemId: 'rtk', installed: false }],
+      run: async () => ({ exitCode: 0, stdout: '', stderr: '' }),
+      log: () => {},
+      err: () => {},
+      onEvent: () => {},
+    });
+    expect(result.conflicts).toBe(0);
+  });
+
+  it('blocks the default install when swap-uninstall fails', async () => {
+    const a = mkItem('a'); // default: true
+    const b = mkSibling('b', true); // drifted, has uninstall
+    const catalog: Catalog = mkCatalog([
+      { id: 'mem', name: 'Memory', kind: 'pick-one', items: [a, b] },
+    ]);
+    const calls: string[] = [];
+    const result = await runDefaultInstall({
+      items: [a],
+      catalog,
+      detect: async () => [
+        { itemId: 'a', installed: false },
+        { itemId: 'b', installed: true },
+      ],
+      run: async (cmd) => {
+        calls.push(cmd);
+        // simulate uninstall failure
+        if (cmd === 'uninstall-b') return { exitCode: 1, stdout: '', stderr: 'boom' };
+        return { exitCode: 0, stdout: '', stderr: '' };
+      },
+      log: () => {},
+      err: () => {},
+      onEvent: () => {},
+    });
+    // 'install-a' must NOT have been called — invariant: never install default while sibling on disk
+    expect(calls).toEqual(['uninstall-b']);
+    expect(result.ok).toBe(0);
+    expect(result.failed).toBe(1);
+  });
+
   it('reports nothing-to-do for an empty default set', async () => {
     const logs: string[] = [];
     const result = await runDefaultInstall({
@@ -109,6 +188,95 @@ describe('runDefaultInstall', () => {
     expect(result.failed).toBe(0);
     expect(result.skipped).toBe(0);
     expect(logs.some((l) => /nothing to do/.test(l))).toBe(true);
+  });
+
+  it('skips the default and bumps conflicts when the drifted sibling has no uninstall command', async () => {
+    const a = mkItem('a'); // default: true
+    const b = mkSibling('b', false); // drifted, NO uninstall
+    const catalog: Catalog = mkCatalog([
+      { id: 'mem', name: 'Memory', kind: 'pick-one', items: [a, b] },
+    ]);
+    const calls: string[] = [];
+    const errs: string[] = [];
+    const logs: string[] = [];
+    const result = await runDefaultInstall({
+      items: [a],
+      catalog,
+      detect: async () => [
+        { itemId: 'a', installed: false },
+        { itemId: 'b', installed: true },
+      ],
+      run: async (cmd) => { calls.push(cmd); return { exitCode: 0, stdout: '', stderr: '' }; },
+      log: (m) => logs.push(m),
+      err: (m) => errs.push(m),
+      onEvent: () => {},
+    });
+    expect(calls).toEqual([]);
+    expect(result.ok).toBe(0);
+    expect(result.failed).toBe(0);
+    expect(result.conflicts).toBe(1);
+    expect(logs.some((l) => /no uninstall command; skipping a/.test(l))).toBe(true);
+  });
+
+  it('runs all swap-uninstalls before any default install across multiple groups', async () => {
+    const a = mkItem('a');
+    const x = mkItem('x');
+    const b = mkSibling('b', true);
+    const y = mkSibling('y', true);
+    const catalog: Catalog = mkCatalog([
+      { id: 'g1', name: 'G1', kind: 'pick-one', items: [a, b] },
+      { id: 'g2', name: 'G2', kind: 'pick-one', items: [x, y] },
+    ]);
+    const calls: string[] = [];
+    const result = await runDefaultInstall({
+      items: [a, x],
+      catalog,
+      detect: async () => [
+        { itemId: 'a', installed: false },
+        { itemId: 'b', installed: true },
+        { itemId: 'x', installed: false },
+        { itemId: 'y', installed: true },
+      ],
+      run: async (cmd) => { calls.push(cmd); return { exitCode: 0, stdout: '', stderr: '' }; },
+      log: () => {},
+      err: () => {},
+      onEvent: () => {},
+    });
+    const lastUninstall = Math.max(calls.indexOf('uninstall-b'), calls.indexOf('uninstall-y'));
+    const firstInstall = Math.min(calls.indexOf('install-a'), calls.indexOf('install-x'));
+    expect(lastUninstall).toBeGreaterThanOrEqual(0);
+    expect(firstInstall).toBeGreaterThan(lastUninstall);
+    expect(result.ok).toBe(2);
+    expect(result.conflicts).toBe(0);
+  });
+
+  it('records swap-uninstall before install in dry-run, executes nothing', async () => {
+    const a = mkItem('a');
+    const b = mkSibling('b', true);
+    const catalog: Catalog = mkCatalog([
+      { id: 'mem', name: 'Memory', kind: 'pick-one', items: [a, b] },
+    ]);
+    const calls: string[] = [];
+    const logs: string[] = [];
+    const result = await runDefaultInstall({
+      items: [a],
+      catalog,
+      detect: async () => [
+        { itemId: 'a', installed: false },
+        { itemId: 'b', installed: true },
+      ],
+      run: async (cmd) => { calls.push(cmd); return { exitCode: 0, stdout: '', stderr: '' }; },
+      log: (m) => logs.push(m),
+      err: () => {},
+      onEvent: () => {},
+      dryRun: true,
+    });
+    expect(calls).toEqual([]);
+    const uIdx = logs.findIndex((l) => l.includes('$ uninstall-b'));
+    const iIdx = logs.findIndex((l) => l.includes('$ install-a'));
+    expect(uIdx).toBeGreaterThanOrEqual(0);
+    expect(iIdx).toBeGreaterThan(uIdx);
+    expect(result.ok).toBe(1);
   });
 });
 
