@@ -15,6 +15,7 @@ describe('bundled catalog', () => {
     const json = JSON.parse(readFileSync(path, 'utf-8'));
     const ids = json.items.map((i: { id: string }) => i.id).sort();
     expect(ids).toEqual([
+      'caveman',
       'claude-code-setup',
       'claude-mem',
       'context7',

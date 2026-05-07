@@ -1,7 +1,18 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-05",
+  "updatedAt": "2026-05-06",
   "items": [
+    {
+      "id": "caveman",
+      "name": "caveman",
+      "description": "Claude Code plugin for terse, token-efficient caveman-style responses",
+      "kind": "plugin",
+      "homepage": "https://github.com/JuliusBrussee/caveman",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "caveman" },
+      "install":   { "command": "claude plugin marketplace add JuliusBrussee/caveman && claude plugin install caveman@caveman" },
+      "uninstall": { "command": "claude plugin uninstall caveman" }
+    },
     {
       "id": "claude-mem",
       "name": "claude-mem",
