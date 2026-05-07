@@ -95,6 +95,18 @@ describe('runDefaultInstall', () => {
     expect(logs.some((l) => /post-install Claude prompt skipped/.test(l))).toBe(true);
   });
 
+  it('initializes the conflicts counter at zero on a clean run', async () => {
+    const result = await runDefaultInstall({
+      items: [mkItem('rtk')],
+      detect: async () => [{ itemId: 'rtk', installed: false }],
+      run: async () => ({ exitCode: 0, stdout: '', stderr: '' }),
+      log: () => {},
+      err: () => {},
+      onEvent: () => {},
+    });
+    expect(result.conflicts).toBe(0);
+  });
+
   it('reports nothing-to-do for an empty default set', async () => {
     const logs: string[] = [];
     const result = await runDefaultInstall({

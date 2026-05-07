@@ -75,10 +75,11 @@ export interface DefaultInstallResult {
   ok: number;
   failed: number;
   skipped: number;
+  conflicts: number;
 }
 
 export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<DefaultInstallResult> {
-  const result: DefaultInstallResult = { ok: 0, failed: 0, skipped: 0 };
+  const result: DefaultInstallResult = { ok: 0, failed: 0, skipped: 0, conflicts: 0 };
   if (deps.items.length === 0) {
     deps.log('default: nothing to do (no items flagged default: true)');
     return result;
@@ -132,7 +133,7 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
 
   const summaryColor = result.failed > 0 ? 'fail' : 'ok';
   const dryNote = deps.dryRun ? ' [dry-run]' : '';
-  deps.log(paint(`default${dryNote}: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped`, summaryColor));
+  deps.log(paint(`default${dryNote}: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped, ${result.conflicts} conflicts`, summaryColor));
   return result;
 }
 
