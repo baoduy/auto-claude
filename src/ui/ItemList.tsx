@@ -10,6 +10,8 @@ export interface ItemListProps {
   selected: Set<string>;
   cursor: number;
   showBack?: boolean;
+  /** Override the terminal row count (for tests). Defaults to process.stdout.rows. */
+  terminalRows?: number;
 }
 
 interface RowVisuals {
@@ -58,12 +60,47 @@ function visualsFor(it: CatalogItem, group: CatalogGroup, isSelected: boolean, i
   return { glyph: offGlyph, badge: '', rowColor: isCursor ? COLORS.cursor : undefined, bracketed };
 }
 
-export function ItemList({ catalog, states, selected, cursor, showBack = false }: ItemListProps): React.JSX.Element {
-  const byId = new Map(states.map((s) => [s.itemId, s]));
-  let idx = -1;
+/** Approximate non-item rows reserved by chrome (header/breadcrumb/group margins/footer). */
+const RESERVED_ROWS = 14;
+/** Minimum visible items so the viewport is always usable, even on tiny terminals. */
+const MIN_VISIBLE = 5;
 
-  const renderItem = (it: CatalogItem, group: CatalogGroup) => {
-    idx++;
+export function ItemList({ catalog, states, selected, cursor, showBack = false, terminalRows }: ItemListProps): React.JSX.Element {
+  const byId = new Map(states.map((s) => [s.itemId, s]));
+
+  // Build a flat index of items so we can window them globally while preserving group structure.
+  const flat: { item: CatalogItem; group: CatalogGroup; idx: number }[] = [];
+  let i = 0;
+  for (const g of catalog.groups) {
+    for (const it of g.items) {
+      flat.push({ item: it, group: g, idx: i });
+      i++;
+    }
+  }
+  const totalItems = flat.length;
+
+  // Compute viewport — keep cursor centered when possible, clamp to bounds.
+  const rows = terminalRows ?? process.stdout.rows ?? 24;
+  const visibleCount = Math.max(MIN_VISIBLE, Math.min(totalItems, rows - RESERVED_ROWS));
+  const half = Math.floor(visibleCount / 2);
+  const maxStart = Math.max(0, totalItems - visibleCount);
+  const viewStart = Math.max(0, Math.min(cursor - half, maxStart));
+  const viewEnd = Math.min(totalItems, viewStart + visibleCount);
+
+  const aboveCount = viewStart;
+  const belowCount = Math.max(0, totalItems - viewEnd);
+
+  // Re-bucket the windowed items back into their groups so headers only render
+  // for groups with at least one visible item.
+  const groupsInView: { group: CatalogGroup; items: { item: CatalogItem; idx: number }[] }[] = [];
+  for (const g of catalog.groups) {
+    const visible = flat
+      .filter((f) => f.group === g && f.idx >= viewStart && f.idx < viewEnd)
+      .map((f) => ({ item: f.item, idx: f.idx }));
+    if (visible.length > 0) groupsInView.push({ group: g, items: visible });
+  }
+
+  const renderItem = (it: CatalogItem, group: CatalogGroup, idx: number) => {
     const isCursor = idx === cursor;
     const isSelected = selected.has(it.id);
     const installed = !!byId.get(it.id)?.installed;
@@ -90,16 +127,22 @@ export function ItemList({ catalog, states, selected, cursor, showBack = false }
 
   return (
     <Box flexDirection="column">
-      {catalog.groups.map((g) => (
+      {aboveCount > 0 && (
+        <Text dimColor>↑ {aboveCount} more above</Text>
+      )}
+      {groupsInView.map(({ group: g, items }) => (
         <Box key={g.id} flexDirection="column" marginTop={1}>
           <Text bold color={COLORS.group}>
             {g.name}
             {g.kind === 'pick-one' ? <Text dimColor> (pick one)</Text> : null}
           </Text>
           {g.description ? <Text dimColor>{g.description}</Text> : null}
-          {g.items.map((it) => renderItem(it, g))}
+          {items.map(({ item, idx }) => renderItem(item, g, idx))}
         </Box>
       ))}
+      {belowCount > 0 && (
+        <Text dimColor>↓ {belowCount} more below</Text>
+      )}
       <Box marginTop={1} flexDirection="column">
         <Text dimColor>
           {GLYPHS.cursor} navigate ↑↓ · space toggle · enter continue{showBack ? ' · ← back' : ''} · q quit

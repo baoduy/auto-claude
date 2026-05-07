@@ -71,3 +71,63 @@ describe('ItemList grouped layout', () => {
     expect(lastFrame()).toMatch(/\[ \]/);
   });
 });
+
+describe('ItemList viewport (cursor follows window)', () => {
+  // 20 items in one group — far more than fits in any reasonable viewport.
+  const longCatalog: Catalog = {
+    version: 2, updatedAt: '2026-05-07',
+    groups: [{
+      id: 'big', name: 'Big group', kind: 'pick-many',
+      items: Array.from({ length: 20 }, (_, n) => ({
+        id: `i${n}`, name: `Item${n}`, description: `desc-${n}`,
+        kind: 'plugin' as const, defaultScope: 'global' as const,
+        detect: { command: 'true' }, install: { command: 'true' },
+      })),
+    }],
+  };
+
+  it('clips above and below when the cursor is in the middle', () => {
+    const { lastFrame } = render(
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={10} terminalRows={20} />
+    );
+    const frame = lastFrame() ?? '';
+    expect(frame).toMatch(/more above/);
+    expect(frame).toMatch(/more below/);
+    // Cursor at idx 10 with visibleCount=6 (20-14) and half=3 → window [7,13).
+    // Item7..Item12 should be visible; Item0 and Item19 should not.
+    expect(frame).toContain('Item10');
+    expect(frame).not.toContain('Item0 ');
+    expect(frame).not.toContain('Item19');
+  });
+
+  it('does not show "more above" at the top of the list', () => {
+    const { lastFrame } = render(
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={0} terminalRows={20} />
+    );
+    const frame = lastFrame() ?? '';
+    expect(frame).not.toMatch(/more above/);
+    expect(frame).toMatch(/more below/);
+    expect(frame).toContain('Item0');
+  });
+
+  it('does not show "more below" at the bottom of the list', () => {
+    const { lastFrame } = render(
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={19} terminalRows={20} />
+    );
+    const frame = lastFrame() ?? '';
+    expect(frame).toMatch(/more above/);
+    expect(frame).not.toMatch(/more below/);
+    expect(frame).toContain('Item19');
+  });
+
+  it('shows all items when the viewport is large enough', () => {
+    const { lastFrame } = render(
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={0} terminalRows={100} />
+    );
+    const frame = lastFrame() ?? '';
+    expect(frame).not.toMatch(/more above/);
+    expect(frame).not.toMatch(/more below/);
+    expect(frame).toContain('Item0');
+    expect(frame).toContain('Item19');
+  });
+});
