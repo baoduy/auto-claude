@@ -32,7 +32,7 @@ describe('<App>', () => {
         runInstall={async () => {}} onComplete={onComplete}
       />
     );
-    expect(lastFrame()).toContain('Memory backend');
+    expect(lastFrame()).toMatch(/Tools\s*\(1\//);
     expect(lastFrame()).toMatch(/claude|auto-claude/i);
     await new Promise((r) => setTimeout(r, 10)); // wait for useInput to register
     stdin.write('q');
@@ -40,21 +40,38 @@ describe('<App>', () => {
     expect(onComplete).toHaveBeenCalledWith({ aborted: true });
   });
 
-  it('selecting an item, then enter, advances to scope prompt when plugin selected', async () => {
+  it('walks all kind pages and advances to scope when a plugin is selected', async () => {
     const onComplete = vi.fn();
+    const fixture: Catalog = {
+      version: 2, updatedAt: '2026-05-07',
+      groups: [
+        { id: 'g-tool', name: 'Tools', kind: 'pick-many', items: [
+          { id: 't1', name: 't1', description: '', kind: 'tool', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' } },
+        ]},
+        { id: 'g-plugin', name: 'Plugins', kind: 'pick-many', items: [
+          { id: 'p1', name: 'p1', description: '', kind: 'plugin', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' } },
+        ]},
+      ],
+    };
+    const fState: InstallState[] = [
+      { itemId: 't1', installed: false },
+      { itemId: 'p1', installed: false },
+    ];
     const { stdin, lastFrame } = render(
-      <App
-        catalog={catalog} initialStates={states} repoRoot={'/repo'}
-        runInstall={async () => {}} onComplete={onComplete}
-      />
+      <App catalog={fixture} initialStates={fState} repoRoot={'/repo'}
+           runInstall={async () => {}} onComplete={onComplete} />
     );
-    // Cursor at 0 (claude-mem, a plugin). Toggle it, then enter.
-    await new Promise((r) => setTimeout(r, 10)); // wait for useInput to register
-    stdin.write(' '); // toggle (first item is already a plugin)
     await new Promise((r) => setTimeout(r, 10));
-    stdin.write('\r'); // enter
+    // Tools page: don't toggle, just advance.
+    stdin.write('\r');
     await new Promise((r) => setTimeout(r, 10));
-    expect(lastFrame()).toMatch(/claude|auto-claude/i);
+    // Plugins page: toggle p1, then advance.
+    stdin.write(' ');
+    await new Promise((r) => setTimeout(r, 10));
+    stdin.write('\r');
+    await new Promise((r) => setTimeout(r, 10));
     expect(lastFrame()).toContain('How should plugins be installed?');
   }, 15000);
 
@@ -153,5 +170,98 @@ describe('<App>', () => {
     const plan = received as InstallPlan | null;
     expect(plan?.selected.map((i: CatalogItem) => i.id)).toEqual(['b']);
     expect(plan?.uninstall?.map((i: CatalogItem) => i.id)).toEqual(['a']);
+  });
+
+  it('back navigation returns to the previous kind page', async () => {
+    const onComplete = vi.fn();
+    const fixture: Catalog = {
+      version: 2, updatedAt: '2026-05-07',
+      groups: [
+        { id: 'g-tool', name: 'Tools', kind: 'pick-many', items: [
+          { id: 't1', name: 't1', description: '', kind: 'tool', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' } },
+        ]},
+        { id: 'g-plugin', name: 'Plugins', kind: 'pick-many', items: [
+          { id: 'p1', name: 'p1', description: '', kind: 'plugin', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' } },
+        ]},
+      ],
+    };
+    const { stdin, lastFrame } = render(
+      <App catalog={fixture}
+           initialStates={[{ itemId: 't1', installed: false }, { itemId: 'p1', installed: false }]}
+           repoRoot={'/repo'} runInstall={async () => {}} onComplete={onComplete} />
+    );
+    await new Promise((r) => setTimeout(r, 10));
+    expect(lastFrame()).toMatch(/Tools\s*\(1\/2\)/);
+    stdin.write('\r'); // advance to plugins
+    await new Promise((r) => setTimeout(r, 10));
+    expect(lastFrame()).toMatch(/Plugins\s*\(2\/2\)/);
+    stdin.write('\x1b[D'); // ESC [ D = left arrow
+    await new Promise((r) => setTimeout(r, 10));
+    expect(lastFrame()).toMatch(/Tools\s*\(1\/2\)/);
+  });
+
+  it('skips empty kind pages — no tools means breadcrumb starts at plugins', async () => {
+    const fixture: Catalog = {
+      version: 2, updatedAt: '2026-05-07',
+      groups: [
+        { id: 'g-plugin', name: 'Plugins', kind: 'pick-many', items: [
+          { id: 'p1', name: 'p1', description: '', kind: 'plugin', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' } },
+        ]},
+      ],
+    };
+    const { lastFrame } = render(
+      <App catalog={fixture}
+           initialStates={[{ itemId: 'p1', installed: false }]}
+           repoRoot={'/repo'} runInstall={async () => {}} onComplete={() => {}} />
+    );
+    await new Promise((r) => setTimeout(r, 10));
+    const frame = lastFrame() ?? '';
+    expect(frame).toMatch(/Plugins\s*\(1\/1\)/);
+    expect(frame).not.toMatch(/Tools/);
+    expect(frame).not.toMatch(/MCP/);
+  });
+
+  it('a mixed-kind pick-one group is rendered on its assigned page and still mutually-excludes siblings', async () => {
+    let received: InstallPlan | null = null;
+    const fixture: Catalog = {
+      version: 2, updatedAt: '2026-05-07',
+      groups: [
+        { id: 'mem', name: 'Memory', kind: 'pick-one', page: 'plugin', items: [
+          { id: 'm-plugin', name: 'm-plugin', description: '', kind: 'plugin', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' } },
+          { id: 'm-tool', name: 'm-tool', description: '', kind: 'tool', defaultScope: 'global',
+            detect: { command: 'true' }, install: { command: 'true' } },
+        ]},
+      ],
+    };
+    const { stdin } = render(
+      <App catalog={fixture}
+           initialStates={[{ itemId: 'm-plugin', installed: false }, { itemId: 'm-tool', installed: false }]}
+           repoRoot={'/repo'}
+           runInstall={async (plan) => { received = plan; }}
+           onComplete={() => {}} />
+    );
+    await new Promise((r) => setTimeout(r, 10));
+    // Single page = plugin. Toggle first item (m-plugin), then ↓ + space (m-tool) to flip the pick-one.
+    stdin.write(' ');
+    await new Promise((r) => setTimeout(r, 10));
+    stdin.write('\x1b[B'); // down
+    await new Promise((r) => setTimeout(r, 10));
+    stdin.write(' ');
+    await new Promise((r) => setTimeout(r, 10));
+    stdin.write('\r'); // enter — last page, no plugins so goes to confirm
+    await new Promise((r) => setTimeout(r, 10));
+    // We need to choose scope and confirm to get runInstall called. Press enter on global, then enter on confirm.
+    stdin.write('\r'); // scope = global
+    await new Promise((r) => setTimeout(r, 10));
+    stdin.write('\r'); // confirm
+    await new Promise((r) => setTimeout(r, 50));
+    expect(received).not.toBeNull();
+    const ids = (received as unknown as InstallPlan).selected.map((i) => i.id);
+    expect(ids).toContain('m-tool');
+    expect(ids).not.toContain('m-plugin');
   });
 });

@@ -124,3 +124,35 @@ describe('mcp item schema', () => {
     expect(() => CatalogSchema.parse(cat)).toThrow(/duplicate mcpKey/);
   });
 });
+
+describe('CatalogGroup.page', () => {
+  const baseGroup = {
+    id: 'g1', name: 'G', kind: 'pick-many' as const,
+    items: [{
+      id: 'i1', name: 'I', description: '', kind: 'tool' as const,
+      defaultScope: 'global' as const,
+      detect: { command: 'true' }, install: { command: 'true' },
+    }],
+  };
+
+  it('accepts groups without a page field (back-compat)', () => {
+    const r = CatalogSchema.safeParse({ version: 2, updatedAt: '2026-05-07', groups: [baseGroup] });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts a valid page override', () => {
+    const r = CatalogSchema.safeParse({
+      version: 2, updatedAt: '2026-05-07',
+      groups: [{ ...baseGroup, page: 'plugin' }],
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects an invalid page value', () => {
+    const r = CatalogSchema.safeParse({
+      version: 2, updatedAt: '2026-05-07',
+      groups: [{ ...baseGroup, page: 'banana' }],
+    });
+    expect(r.success).toBe(false);
+  });
+});
