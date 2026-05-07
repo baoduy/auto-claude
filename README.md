@@ -34,7 +34,7 @@ Items shipped to every device are flagged `"default": true` in `catalog.json`. T
 
 ## What it installs
 
-The catalog is fetched at runtime; the bundled fallback ships with these:
+The catalog is fetched at runtime; the root `catalog.json` ships with the npm package as the offline fallback:
 
 **Tools**
 - **rtk** — token-optimized CLI proxy (also runs `rtk init -g` in the repo)

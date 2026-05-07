@@ -62,6 +62,11 @@ export interface McpItem extends BaseCatalogItem {
   /** Key under which the server is written into .mcp.json's mcpServers. */
   mcpKey: string;
   mcpServer: McpServerConfig;
+  /**
+   * Optional post-install actions (typically `claude-prompt` instructions
+   * telling the user to set an API key or run an auth command).
+   */
+  postInstall?: PostInstallAction[];
 }
 
 export type CatalogItem = ToolItem | PluginItem | McpItem;
