@@ -5,7 +5,7 @@ import { detectStates } from '../engine/detect.js';
 import { findRepoRoot } from '../engine/project.js';
 import { executeInstall } from '../engine/executor.js';
 import { App } from '../ui/App.js';
-import { clearScreen } from '../ui/clearScreen.js';
+import { enterAltScreen, exitAltScreen } from '../ui/altScreen.js';
 import { execa } from 'execa';
 import type { DeferredInteractive, EngineEvent, InstallPlan } from '../types.js';
 import { flattenItems } from '../catalog/groups.js';
@@ -30,18 +30,22 @@ export async function runInstall(opts: { refreshCatalog?: boolean } = {}): Promi
   };
 
   let runError: string | undefined;
-  clearScreen();
-  await new Promise<void>((resolve) => {
-    const app = render(
-      <App
-        catalog={catalog}
-        initialStates={initialStates}
-        repoRoot={repoRoot}
-        runInstall={runInstallEngine}
-        onComplete={(r) => { runError = r.error; app.unmount(); resolve(); }}
-      />
-    );
-  });
+  enterAltScreen();
+  try {
+    await new Promise<void>((resolve) => {
+      const app = render(
+        <App
+          catalog={catalog}
+          initialStates={initialStates}
+          repoRoot={repoRoot}
+          runInstall={runInstallEngine}
+          onComplete={(r) => { runError = r.error; app.unmount(); resolve(); }}
+        />
+      );
+    });
+  } finally {
+    exitAltScreen();
+  }
 
   if (runError) {
     process.stderr.write(`\nauto-claude: ${runError}\n`);
