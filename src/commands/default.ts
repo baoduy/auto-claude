@@ -93,6 +93,7 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
 
   const blockedDefaults = new Set<string>();
   const swapUninstalls: CatalogItem[] = [];
+  const swapBatchDefaults = new Set<string>();
 
   if (deps.catalog) {
     const conflicts = findDefaultConflicts(deps.catalog, installedIds);
@@ -100,6 +101,7 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
       for (const sib of c.driftedSiblings) {
         if (isShellItem(sib) && sib.uninstall) {
           swapUninstalls.push(sib);
+          swapBatchDefaults.add(c.defaultItem.id);
           deps.log(paint(
             `${GLYPHS.info} conflict in "${c.groupName}": ${sib.id} drift from default ${c.defaultItem.id}; uninstalling sibling`,
             'warn',
@@ -135,6 +137,8 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
     } catch (e) {
       deps.err(paint(`${GLYPHS.fail} swap-uninstall failed: ${(e as Error).message}`, 'fail'));
       result.failed++;
+      // Block every default whose sibling we attempted to uninstall — invariant: never install a default while its conflicting sibling is on disk.
+      for (const id of swapBatchDefaults) blockedDefaults.add(id);
     }
   }
 

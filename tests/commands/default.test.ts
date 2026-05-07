@@ -144,6 +144,36 @@ describe('runDefaultInstall', () => {
     expect(result.conflicts).toBe(0);
   });
 
+  it('blocks the default install when swap-uninstall fails', async () => {
+    const a = mkItem('a'); // default: true
+    const b = mkSibling('b', true); // drifted, has uninstall
+    const catalog: Catalog = mkCatalog([
+      { id: 'mem', name: 'Memory', kind: 'pick-one', items: [a, b] },
+    ]);
+    const calls: string[] = [];
+    const result = await runDefaultInstall({
+      items: [a],
+      catalog,
+      detect: async () => [
+        { itemId: 'a', installed: false },
+        { itemId: 'b', installed: true },
+      ],
+      run: async (cmd) => {
+        calls.push(cmd);
+        // simulate uninstall failure
+        if (cmd === 'uninstall-b') return { exitCode: 1, stdout: '', stderr: 'boom' };
+        return { exitCode: 0, stdout: '', stderr: '' };
+      },
+      log: () => {},
+      err: () => {},
+      onEvent: () => {},
+    });
+    // 'install-a' must NOT have been called — invariant: never install default while sibling on disk
+    expect(calls).toEqual(['uninstall-b']);
+    expect(result.ok).toBe(0);
+    expect(result.failed).toBe(1);
+  });
+
   it('reports nothing-to-do for an empty default set', async () => {
     const logs: string[] = [];
     const result = await runDefaultInstall({
