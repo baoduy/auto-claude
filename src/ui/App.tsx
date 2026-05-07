@@ -12,6 +12,8 @@ import { orderForInstall } from '../engine/ordering.js';
 import { Header } from './Header.js';
 import { flattenItems, groupByItemId, activeKinds as computeActiveKinds, groupsForKind } from '../catalog/groups.js';
 import { KindPageBreadcrumb } from './KindPageBreadcrumb.js';
+import { useTerminalRows } from './useTerminalRows.js';
+import { useMeasuredHeight } from './useMeasuredHeight.js';
 
 type Screen = 'conflict' | 'select' | 'scope' | 'confirm' | 'run' | 'done';
 
@@ -37,6 +39,11 @@ function findConflicts(catalog: Catalog, installedIds: Set<string>): ConflictIte
 
 export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }: AppProps): React.JSX.Element {
   const { exit } = useApp();
+
+  const HEADER_ROWS = 2; // compact Header: brand glyph line + marginBottom
+  const totalRows = useTerminalRows();
+  const [chromeRef, chromeHeight] = useMeasuredHeight();
+  const viewportRows = Math.max(8, totalRows - HEADER_ROWS - chromeHeight);
 
   const hasMcpItems = useMemo(
     () => catalog.groups.some((g) => g.items.some((i) => i.kind === 'mcp')),
@@ -248,16 +255,19 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     const pageCatalog = { ...displayCatalog, groups: pageGroups };
     body = (
       <Box flexDirection="column">
-        <KindPageBreadcrumb kinds={activeKinds} index={safePageIndex} />
-        {!repoRoot && hasMcpItems && safePageIndex === 0 && (
-          <Text dimColor>MCP items require a project (no repo detected).</Text>
-        )}
+        <Box flexDirection="column" ref={chromeRef}>
+          <KindPageBreadcrumb kinds={activeKinds} index={safePageIndex} />
+          {!repoRoot && hasMcpItems && safePageIndex === 0 && (
+            <Text dimColor>MCP items require a project (no repo detected).</Text>
+          )}
+        </Box>
         <ItemList
           catalog={pageCatalog}
           states={adjustedStates}
           selected={selected}
           cursor={cursor}
           showBack={safePageIndex > 0}
+          viewportRows={viewportRows}
         />
       </Box>
     );
@@ -300,7 +310,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
 
   return (
     <Box flexDirection="column">
-      <Header variant="splash" />
+      <Header variant="compact" />
       {body}
     </Box>
   );
