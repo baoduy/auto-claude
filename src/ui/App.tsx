@@ -172,6 +172,8 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       else if (key.downArrow) setCursorForCurrentPage((c) => Math.min(pageItems.length - 1, c + 1));
       else if (key.leftArrow || input === 'b') {
         if (safePageIndex > 0) setKindPageIndex(safePageIndex - 1);
+      } else if (key.rightArrow) {
+        if (safePageIndex < activeKinds.length - 1) setKindPageIndex(safePageIndex + 1);
       } else if (input === ' ') {
         const it = pageItems[cursor];
         if (!it) return;
