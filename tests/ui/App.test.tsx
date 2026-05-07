@@ -76,7 +76,7 @@ describe('<App>', () => {
     await new Promise((r) => setTimeout(r, 10));
     stdin.write('\r');
     await new Promise((r) => setTimeout(r, 10));
-    expect(lastFrame()).toContain('How should plugins be installed?');
+    expect(lastFrame()).toContain('How should plugins');
   }, 15000);
 
   it('pick-one selection deselects siblings', async () => {

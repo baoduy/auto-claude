@@ -7,7 +7,7 @@ import { executeInstall } from '../../src/engine/executor.js';
 import type { CatalogItem, EngineEvent, InstallPlan } from '../../src/types.js';
 
 function fixture(repo: string, selected: CatalogItem[], uninstall: CatalogItem[] = []): InstallPlan {
-  return { selected, uninstall, pluginScope: 'project', repoRoot: repo };
+  return { selected, uninstall, scope: 'project', repoRoot: repo };
 }
 
 const fooMcp: CatalogItem = {

@@ -10,12 +10,15 @@ import { execa } from 'execa';
 import type { DeferredInteractive, EngineEvent, InstallPlan } from '../types.js';
 import { flattenItems } from '../catalog/groups.js';
 
-export async function runInstall(opts: { refreshCatalog?: boolean } = {}): Promise<void> {
+export async function runInstall(
+  opts: { refreshCatalog?: boolean; dryRun?: boolean } = {},
+): Promise<void> {
   const catalog = await loadCatalog(defaultDeps({ refresh: opts.refreshCatalog }));
   const repoRoot = await findRepoRoot();
   const initialStates = await detectStates(flattenItems(catalog), undefined, repoRoot);
 
   const deferred: DeferredInteractive[] = [];
+  const dryRunRecord: string[] = [];
 
   const runInstallEngine = async (plan: InstallPlan, onEvent: (e: EngineEvent) => void) => {
     await executeInstall(plan, {
@@ -24,7 +27,8 @@ export async function runInstall(opts: { refreshCatalog?: boolean } = {}): Promi
         return { exitCode: r.exitCode ?? 1, stdout: r.stdout, stderr: r.stderr };
       },
       onEvent,
-      dryRun: false,
+      dryRun: !!opts.dryRun,
+      record: (line) => dryRunRecord.push(line),
       deferred,
     });
   };
@@ -50,6 +54,17 @@ export async function runInstall(opts: { refreshCatalog?: boolean } = {}): Promi
   if (runError) {
     process.stderr.write(`\nauto-claude: ${runError}\n`);
     process.exitCode = 1;
+    return;
+  }
+
+  if (opts.dryRun) {
+    process.stdout.write('\n--- dry run: recorded actions ---\n');
+    if (dryRunRecord.length === 0) {
+      process.stdout.write('  (no actions)\n');
+    } else {
+      for (const line of dryRunRecord) process.stdout.write(`  ${line}\n`);
+    }
+    process.stdout.write('--- no changes were applied ---\n');
     return;
   }
 

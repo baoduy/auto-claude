@@ -3,8 +3,8 @@ import { Box, Text, useInput, useApp } from 'ink';
 import type { Catalog, CatalogGroup, CatalogItem, EngineEvent, InstallPlan, InstallState, Scope } from '../types.js';
 import { isShellItem } from '../types.js';
 import { ItemList } from './ItemList.js';
-import { PluginScopePrompt } from './PluginScopePrompt.js';
-import { ConfirmSummary } from './ConfirmSummary.js';
+import { ScopePrompt, type ScopeKindGroup } from './ScopePrompt.js';
+import { ConfirmSummary, type ConfirmKindGroup } from './ConfirmSummary.js';
 import { ProgressLog } from './ProgressLog.js';
 import { PostInstallPanel } from './PostInstallPanel.js';
 import { ConflictPrompt } from './ConflictPrompt.js';
@@ -112,7 +112,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     });
   };
   const [scopeCursor, setScopeCursor] = useState<0 | 1>(0);
-  const [pluginScope, setPluginScope] = useState<Scope>('global');
+  const [scope, setScope] = useState<Scope>('global');
   const [events, setEvents] = useState<EngineEvent[]>([]);
   const [runError, setRunError] = useState<string | null>(null);
 
@@ -139,9 +139,12 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
 
   const allUninstallIds = Array.from(new Set([...forcedUninstallIds, ...userUninstallIds, ...autoSwapIds]));
 
-  const hasPlugin =
-    newSelected.some((id) => items.find((i) => i.id === id)?.kind === 'plugin') ||
-    allUninstallIds.some((id) => items.find((i) => i.id === id)?.kind === 'plugin');
+  const planHasKind = (k: 'plugin' | 'mcp') =>
+    newSelected.some((id) => items.find((i) => i.id === id)?.kind === k) ||
+    allUninstallIds.some((id) => items.find((i) => i.id === id)?.kind === k);
+  const hasPlugin = planHasKind('plugin');
+  const hasMcpInPlan = planHasKind('mcp');
+  const needsScopePrompt = (hasPlugin || hasMcpInPlan) && !!repoRoot;
 
   const resolveConflict = useCallback((keptId: string) => {
     setPendingConflicts((cs) => {
@@ -207,14 +210,14 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
         }
         // Last page — same terminal behavior as before.
         if (newSelected.length === 0 && allUninstallIds.length === 0) { onComplete({}); exit(); return; }
-        if (hasPlugin && repoRoot) setScreen('scope');
+        if (needsScopePrompt) setScreen('scope');
         else setScreen('confirm');
       }
     } else if (screen === 'scope') {
       if (key.upArrow) setScopeCursor(0);
       else if (key.downArrow) setScopeCursor(1);
       else if (key.return) {
-        setPluginScope(scopeCursor === 0 ? 'global' : 'project');
+        setScope(scopeCursor === 0 ? 'global' : 'project');
         setScreen('confirm');
       }
     } else if (screen === 'confirm') {
@@ -223,7 +226,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
         const plan: InstallPlan = {
           selected: newSelected.map((id) => items.find((i) => i.id === id)!),
           uninstall: allUninstallIds.map((id) => items.find((i) => i.id === id)!),
-          pluginScope,
+          scope,
           repoRoot,
         };
         runInstall(plan, (e) => setEvents((evs) => [...evs, e]))
@@ -272,24 +275,56 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       </Box>
     );
   } else if (screen === 'scope') {
-    body = <PluginScopePrompt cursor={scopeCursor} hasRepo={!!repoRoot} />;
+    const scopeGroups: ScopeKindGroup[] = (['plugin', 'mcp'] as const).map((kind) => {
+      const installs = newSelected
+        .map((id) => items.find((i) => i.id === id)!)
+        .filter((it) => it.kind === kind)
+        .map((it) => it.name);
+      const uninstalls = allUninstallIds
+        .map((id) => items.find((i) => i.id === id)!)
+        .filter((it) => it.kind === kind)
+        .map((it) => it.name);
+      return {
+        kind,
+        label: kind === 'plugin' ? 'Plugins' : 'MCP servers',
+        installs,
+        uninstalls,
+      };
+    });
+    body = <ScopePrompt cursor={scopeCursor} hasRepo={!!repoRoot} groups={scopeGroups} />;
   } else if (screen === 'confirm') {
     const uninstallItems = allUninstallIds.map((id) => items.find((i) => i.id === id)!);
     const installItems = orderForInstall(newSelected.map((id) => items.find((i) => i.id === id)!));
-    const lines: string[] = [];
-    for (const it of [...uninstallItems].reverse()) {
-      const scope = it.kind === 'plugin' ? ` (${pluginScope})` : '';
-      const replacedBy = autoSwapIds.includes(it.id)
-        ? (groupOf.get(it.id)?.items.find((s) => newSelected.includes(s.id))?.name ?? '')
-        : '';
-      const sibling = replacedBy ? ` (replaced by ${replacedBy})` : '';
-      lines.push(`Uninstall ${it.name}${scope}${sibling}`);
-    }
-    for (const it of installItems) {
-      const scope = it.kind === 'plugin' ? ` (${pluginScope})` : '';
-      lines.push(`Install ${it.name}${scope}`);
-    }
-    body = <ConfirmSummary lines={lines} />;
+
+    const buildKind = (
+      kind: 'tool' | 'plugin' | 'mcp',
+      label: string,
+    ): ConfirmKindGroup => {
+      const actions: ConfirmKindGroup['actions'] = [];
+      // Uninstalls run first, so list them first under each kind.
+      for (const it of [...uninstallItems].reverse().filter((i) => i.kind === kind)) {
+        const replacedBy = autoSwapIds.includes(it.id)
+          ? (groupOf.get(it.id)?.items.find((s) => newSelected.includes(s.id))?.name ?? '')
+          : '';
+        actions.push({
+          verb: 'Uninstall',
+          name: it.name,
+          suffix: replacedBy ? `(replaced by ${replacedBy})` : undefined,
+        });
+      }
+      for (const it of installItems.filter((i) => i.kind === kind)) {
+        actions.push({ verb: 'Install', name: it.name });
+      }
+      const scopeSuffix = kind === 'tool' ? undefined : ` (${scope})`;
+      return { kind, label, scopeSuffix, actions };
+    };
+
+    const confirmGroups: ConfirmKindGroup[] = [
+      buildKind('tool', 'Tools'),
+      buildKind('plugin', 'Plugins'),
+      buildKind('mcp', 'MCP servers'),
+    ];
+    body = <ConfirmSummary groups={confirmGroups} />;
   } else if (screen === 'run') {
     body = <ProgressLog events={events} />;
   } else {

@@ -1,6 +1,6 @@
 import type { CatalogItem, InstallState } from '../types.js';
 import { execa } from 'execa';
-import { readMcpConfig, hasMcpServer } from './mcp-config.js';
+import { readMcpConfig, hasMcpServer, mcpConfigPath } from './mcp-config.js';
 
 export interface ShellRunner {
   (cmdline: string): Promise<{ exitCode: number; stdout: string; stderr: string }>;
@@ -16,16 +16,26 @@ export async function detectStates(
   run: ShellRunner = realShellRunner,
   repoRoot: string | null = null,
 ): Promise<InstallState[]> {
-  // For mcp items, read the file once.
-  let mcpConfig: { mcpServers: Record<string, unknown> } | null = null;
-  if (repoRoot) {
-    try { mcpConfig = await readMcpConfig(repoRoot); } catch { mcpConfig = { mcpServers: {} }; }
-  }
+  // For mcp items we look in both possible config files (project .mcp.json
+  // and the user-level ~/.claude.json). An item is "installed" if its
+  // mcpKey appears in either — that way the wizard reports correct state
+  // regardless of whether the user previously installed at project or
+  // global scope.
+  const mcpKeys = new Set<string>();
+  const collect = async (path: string) => {
+    try {
+      const cfg = await readMcpConfig(path);
+      for (const k of Object.keys(cfg.mcpServers ?? {})) mcpKeys.add(k);
+    } catch {
+      // ignore — file missing or unreadable means "no entries"
+    }
+  };
+  await collect(mcpConfigPath('global', null));
+  if (repoRoot) await collect(mcpConfigPath('project', repoRoot));
 
   return Promise.all(items.map(async (item) => {
     if (item.kind === 'mcp') {
-      if (!mcpConfig) return { itemId: item.id, installed: false };
-      return { itemId: item.id, installed: hasMcpServer(mcpConfig as any, item.mcpKey) };
+      return { itemId: item.id, installed: mcpKeys.has(item.mcpKey) };
     }
     try {
       const r = await run(item.detect.command);
@@ -46,3 +56,6 @@ function extractFirstLine(s: string): string | undefined {
   const line = s.split('\n')[0]?.trim();
   return line || undefined;
 }
+
+/** Re-export for callers that still want a single-key check (e.g. status). */
+export { hasMcpServer };

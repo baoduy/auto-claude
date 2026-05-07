@@ -12,7 +12,10 @@ program
   .description('Curated installer for Claude Code tools and plugins')
   .version('0.1.0')
   .option('--refresh-catalog', 'force re-fetch catalog, ignore cache')
-  .action(async (opts) => { await runInstall({ refreshCatalog: !!opts.refreshCatalog }); });
+  .option('--dry-run', 'preview actions without modifying the system')
+  .action(async (opts) => {
+    await runInstall({ refreshCatalog: !!opts.refreshCatalog, dryRun: !!opts.dryRun });
+  });
 
 program.command('status')
   .description('Show installed/missing state for each item')
@@ -22,12 +25,14 @@ program.command('status')
 program.command('remove')
   .description('Uninstall installed items')
   .option('--yes', 'skip confirmation')
-  .action(async (opts) => { await runRemove({ yes: !!opts.yes }); });
+  .option('--dry-run', 'print what would be uninstalled without running anything')
+  .action(async (opts) => { await runRemove({ yes: !!opts.yes, dryRun: !!opts.dryRun }); });
 
 program.command('update')
   .description('Update installed items')
   .option('--only <id>', 'update only the given item')
-  .action(async (opts) => { await runUpdate({ only: opts.only }); });
+  .option('--dry-run', 'print what would be updated without running anything')
+  .action(async (opts) => { await runUpdate({ only: opts.only, dryRun: !!opts.dryRun }); });
 
 program.command('default')
   .description('Silently install all catalog items flagged default: true (global scope, non-interactive)')

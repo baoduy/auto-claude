@@ -7,12 +7,29 @@ import { PostInstallPanel } from '../../src/ui/PostInstallPanel.js';
 import type { EngineEvent } from '../../src/types.js';
 
 describe('<ConfirmSummary>', () => {
-  it('lists action lines', () => {
+  it('renders grouped actions with scope suffix on plugin/mcp headings', () => {
     const { lastFrame } = render(
-      <ConfirmSummary lines={['Install rtk', 'Install superpowers (global)']} />
+      <ConfirmSummary
+        groups={[
+          { kind: 'tool', label: 'Tools', actions: [{ verb: 'Install', name: 'rtk' }] },
+          {
+            kind: 'plugin',
+            label: 'Plugins',
+            scopeSuffix: ' (global)',
+            actions: [{ verb: 'Install', name: 'superpowers' }],
+          },
+          { kind: 'mcp', label: 'MCP servers', scopeSuffix: ' (global)', actions: [] },
+        ]}
+      />,
     );
-    expect(lastFrame()).toContain('Install rtk');
-    expect(lastFrame()).toContain('Install superpowers (global)');
+    const out = lastFrame() ?? '';
+    expect(out).toContain('Tools');
+    expect(out).toContain('Install rtk');
+    expect(out).toContain('Plugins');
+    expect(out).toContain('(global)');
+    expect(out).toContain('Install superpowers');
+    // MCP servers heading suppressed when no actions
+    expect(out).not.toContain('MCP servers');
   });
 });
 
