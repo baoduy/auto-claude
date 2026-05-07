@@ -41,7 +41,7 @@ describe('mcp item visuals', () => {
       }],
     };
     const { lastFrame } = render(
-      <ItemList catalog={mcpCatalog} states={[]} selected={new Set()} cursor={0} />
+      <ItemList catalog={mcpCatalog} states={[]} selected={new Set()} cursor={0} viewportRows={100} />
     );
     expect(lastFrame()).toContain('⚡');
   });
@@ -50,7 +50,7 @@ describe('mcp item visuals', () => {
 describe('ItemList grouped layout', () => {
   it('shows group headers', () => {
     const { lastFrame } = render(
-      <ItemList catalog={catalog} states={[]} selected={new Set(['a'])} cursor={0} />
+      <ItemList catalog={catalog} states={[]} selected={new Set(['a'])} cursor={0} viewportRows={100} />
     );
     expect(lastFrame()).toMatch(/Memory backend/);
     expect(lastFrame()).toMatch(/Documentation providers/);
@@ -58,7 +58,7 @@ describe('ItemList grouped layout', () => {
 
   it('renders pick-one members with radio glyphs', () => {
     const { lastFrame } = render(
-      <ItemList catalog={catalog} states={[]} selected={new Set(['a'])} cursor={0} />
+      <ItemList catalog={catalog} states={[]} selected={new Set(['a'])} cursor={0} viewportRows={100} />
     );
     expect(lastFrame()).toMatch(/[◉●]/);
     expect(lastFrame()).toMatch(/[○◯]/);
@@ -66,7 +66,7 @@ describe('ItemList grouped layout', () => {
 
   it('renders pick-many members with checkbox glyphs', () => {
     const { lastFrame } = render(
-      <ItemList catalog={catalog} states={[]} selected={new Set()} cursor={0} />
+      <ItemList catalog={catalog} states={[]} selected={new Set()} cursor={0} viewportRows={100} />
     );
     expect(lastFrame()).toMatch(/\[ \]/);
   });
@@ -86,15 +86,15 @@ describe('ItemList viewport (cursor follows window)', () => {
     }],
   };
 
+  // viewportRows = 12 → after FOOTER (3) + indicators (2) + group header (1)
+  // → item budget = 6.
   it('clips above and below when the cursor is in the middle', () => {
     const { lastFrame } = render(
-      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={10} terminalRows={20} />
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={10} viewportRows={12} />
     );
     const frame = lastFrame() ?? '';
     expect(frame).toMatch(/more above/);
     expect(frame).toMatch(/more below/);
-    // Cursor at idx 10 with visibleCount=6 (20-14) and half=3 → window [7,13).
-    // Item7..Item12 should be visible; Item0 and Item19 should not.
     expect(frame).toContain('Item10');
     expect(frame).not.toContain('Item0 ');
     expect(frame).not.toContain('Item19');
@@ -102,7 +102,7 @@ describe('ItemList viewport (cursor follows window)', () => {
 
   it('does not show "more above" at the top of the list', () => {
     const { lastFrame } = render(
-      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={0} terminalRows={20} />
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={0} viewportRows={12} />
     );
     const frame = lastFrame() ?? '';
     expect(frame).not.toMatch(/more above/);
@@ -112,7 +112,7 @@ describe('ItemList viewport (cursor follows window)', () => {
 
   it('does not show "more below" at the bottom of the list', () => {
     const { lastFrame } = render(
-      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={19} terminalRows={20} />
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={19} viewportRows={12} />
     );
     const frame = lastFrame() ?? '';
     expect(frame).toMatch(/more above/);
@@ -122,12 +122,24 @@ describe('ItemList viewport (cursor follows window)', () => {
 
   it('shows all items when the viewport is large enough', () => {
     const { lastFrame } = render(
-      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={0} terminalRows={100} />
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={0} viewportRows={100} />
     );
     const frame = lastFrame() ?? '';
     expect(frame).not.toMatch(/more above/);
     expect(frame).not.toMatch(/more below/);
     expect(frame).toContain('Item0');
     expect(frame).toContain('Item19');
+  });
+
+  it('clamps to MIN_VISIBLE when viewportRows is unreasonably small', () => {
+    // viewportRows = 4 leaves negative budget after fixed chrome — clamp to MIN_VISIBLE=3.
+    const { lastFrame } = render(
+      <ItemList catalog={longCatalog} states={[]} selected={new Set()} cursor={5} viewportRows={4} />
+    );
+    const frame = lastFrame() ?? '';
+    // Cursor item must be present; some items must be hidden.
+    expect(frame).toContain('Item5');
+    expect(frame).toMatch(/more above/);
+    expect(frame).toMatch(/more below/);
   });
 });

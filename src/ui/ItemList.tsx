@@ -10,8 +10,10 @@ export interface ItemListProps {
   selected: Set<string>;
   cursor: number;
   showBack?: boolean;
-  /** Override the terminal row count (for tests). Defaults to process.stdout.rows. */
-  terminalRows?: number;
+  /** Total rows the list (items + group headers + indicators + footer) is
+   *  allowed to occupy. Computed by the parent from the terminal height
+   *  minus measured chrome. */
+  viewportRows: number;
 }
 
 interface RowVisuals {
@@ -60,15 +62,16 @@ function visualsFor(it: CatalogItem, group: CatalogGroup, isSelected: boolean, i
   return { glyph: offGlyph, badge: '', rowColor: isCursor ? COLORS.cursor : undefined, bracketed };
 }
 
-/** Approximate non-item rows reserved by chrome (header/breadcrumb/group margins/footer). */
-const RESERVED_ROWS = 14;
-/** Minimum visible items so the viewport is always usable, even on tiny terminals. */
-const MIN_VISIBLE = 5;
+/** Rows the footer hint occupies (marginTop=1 + 2 lines = 3). */
+const FOOTER_ROWS = 3;
+/** Minimum visible items so the viewport stays usable on tiny terminals. */
+const MIN_VISIBLE = 3;
 
-export function ItemList({ catalog, states, selected, cursor, showBack = false, terminalRows }: ItemListProps): React.JSX.Element {
+export function ItemList({ catalog, states, selected, cursor, showBack = false, viewportRows }: ItemListProps): React.JSX.Element {
   const byId = new Map(states.map((s) => [s.itemId, s]));
 
-  // Build a flat index of items so we can window them globally while preserving group structure.
+  // Flatten items with global indices so we can window them while preserving
+  // group structure for rendering.
   const flat: { item: CatalogItem; group: CatalogGroup; idx: number }[] = [];
   let i = 0;
   for (const g of catalog.groups) {
@@ -78,10 +81,19 @@ export function ItemList({ catalog, states, selected, cursor, showBack = false, 
     }
   }
   const totalItems = flat.length;
+  const groupCount = catalog.groups.length;
 
-  // Compute viewport — keep cursor centered when possible, clamp to bounds.
-  const rows = terminalRows ?? process.stdout.rows ?? 24;
-  const visibleCount = Math.max(MIN_VISIBLE, Math.min(totalItems, rows - RESERVED_ROWS));
+  // Allocate rows: footer is fixed; indicators take 1 row each when shown;
+  // each visible group header takes 1 row. Worst case (every group visible
+  // + both indicators) gives the smallest item budget — start there and
+  // grow if windowing means fewer groups are actually visible.
+  const indicatorBudget = 2; // assume both ↑/↓ indicators in worst case
+  const groupHeaderBudget = groupCount; // 1 per group, worst case
+  const itemBudget = Math.max(
+    MIN_VISIBLE,
+    viewportRows - FOOTER_ROWS - indicatorBudget - groupHeaderBudget,
+  );
+  const visibleCount = Math.min(totalItems, itemBudget);
   const half = Math.floor(visibleCount / 2);
   const maxStart = Math.max(0, totalItems - visibleCount);
   const viewStart = Math.max(0, Math.min(cursor - half, maxStart));
@@ -127,22 +139,23 @@ export function ItemList({ catalog, states, selected, cursor, showBack = false, 
 
   return (
     <Box flexDirection="column">
-      {aboveCount > 0 && (
-        <Text dimColor>↑ {aboveCount} more above</Text>
-      )}
-      {groupsInView.map(({ group: g, items }) => (
-        <Box key={g.id} flexDirection="column" marginTop={1}>
-          <Text bold color={COLORS.group}>
-            {g.name}
-            {g.kind === 'pick-one' ? <Text dimColor> (pick one)</Text> : null}
-          </Text>
-          {g.description ? <Text dimColor>{g.description}</Text> : null}
-          {items.map(({ item, idx }) => renderItem(item, g, idx))}
-        </Box>
-      ))}
-      {belowCount > 0 && (
-        <Text dimColor>↓ {belowCount} more below</Text>
-      )}
+      <Box flexDirection="column" overflow="hidden">
+        {aboveCount > 0 && (
+          <Text dimColor>↑ {aboveCount} more above</Text>
+        )}
+        {groupsInView.map(({ group: g, items }) => (
+          <Box key={g.id} flexDirection="column">
+            <Text bold color={COLORS.group}>
+              {g.name}
+              {g.kind === 'pick-one' ? <Text dimColor> (pick one)</Text> : null}
+            </Text>
+            {items.map(({ item, idx }) => renderItem(item, g, idx))}
+          </Box>
+        ))}
+        {belowCount > 0 && (
+          <Text dimColor>↓ {belowCount} more below</Text>
+        )}
+      </Box>
       <Box marginTop={1} flexDirection="column">
         <Text dimColor>
           {GLYPHS.cursor} navigate ↑↓ · space toggle · ← back / → next · enter continue · q quit

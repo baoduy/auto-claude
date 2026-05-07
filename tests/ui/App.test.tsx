@@ -12,17 +12,21 @@ const states: InstallState[] = flattenItems(catalog).map((i) => ({ itemId: i.id,
 describe('<App>', () => {
   let originalIsTTY: boolean | undefined;
   let originalColumns: number | undefined;
+  let originalRows: number | undefined;
 
   beforeEach(() => {
     originalIsTTY = process.stdout.isTTY;
     originalColumns = process.stdout.columns;
+    originalRows = process.stdout.rows;
     Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
     Object.defineProperty(process.stdout, 'columns', { value: 120, configurable: true });
+    Object.defineProperty(process.stdout, 'rows', { value: 30, configurable: true });
   });
 
   afterEach(() => {
     Object.defineProperty(process.stdout, 'isTTY', { value: originalIsTTY, configurable: true });
     Object.defineProperty(process.stdout, 'columns', { value: originalColumns, configurable: true });
+    Object.defineProperty(process.stdout, 'rows', { value: originalRows, configurable: true });
   });
   it('starts on the selection screen and exits on q', async () => {
     const onComplete = vi.fn();
