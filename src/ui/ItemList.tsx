@@ -145,7 +145,7 @@ export function ItemList({ catalog, states, selected, cursor, showBack = false, 
       )}
       <Box marginTop={1} flexDirection="column">
         <Text dimColor>
-          {GLYPHS.cursor} navigate ↑↓ · space toggle · enter continue{showBack ? ' · ← back' : ''} · q quit
+          {GLYPHS.cursor} navigate ↑↓ · space toggle · ← back / → next · enter continue · q quit
         </Text>
         <Text dimColor>uncheck an installed item to uninstall · [{GLYPHS.locked}] = no uninstaller</Text>
       </Box>
