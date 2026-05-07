@@ -20,7 +20,7 @@ describe('mcp-config', () => {
   it('readMcpConfig returns empty mcpServers when file is missing', async () => {
     const repo = mkRepo();
     try {
-      expect(await readMcpConfig(repo)).toEqual({ mcpServers: {} });
+      expect(await readMcpConfig(join(repo, '.mcp.json'))).toEqual({ mcpServers: {} });
     } finally { rmSync(repo, { recursive: true, force: true }); }
   });
 
@@ -58,7 +58,7 @@ describe('mcp-config', () => {
   it('writeMcpConfig creates .mcp.json with 2-space indent and trailing newline', async () => {
     const repo = mkRepo();
     try {
-      await writeMcpConfig(repo, { mcpServers: { foo: { command: 'x' } } });
+      await writeMcpConfig(join(repo, '.mcp.json'), { mcpServers: { foo: { command: 'x' } } });
       const buf = await fs.readFile(join(repo, '.mcp.json'), 'utf-8');
       expect(buf).toBe('{\n  "mcpServers": {\n    "foo": {\n      "command": "x"\n    }\n  }\n}\n');
     } finally { rmSync(repo, { recursive: true, force: true }); }
@@ -68,7 +68,7 @@ describe('mcp-config', () => {
     const repo = mkRepo();
     try {
       await fs.writeFile(join(repo, '.mcp.json'), '{not json', 'utf-8');
-      await expect(readMcpConfig(repo)).rejects.toThrow(/\.mcp\.json/);
+      await expect(readMcpConfig(join(repo, '.mcp.json'))).rejects.toThrow(/\.mcp\.json/);
     } finally { rmSync(repo, { recursive: true, force: true }); }
   });
 });

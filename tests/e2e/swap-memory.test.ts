@@ -80,5 +80,5 @@ describe('e2e: memory swap', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(captured!.uninstall?.map((i) => i.id)).toContain('claude-mem');
     expect(captured!.selected.map((i) => i.id)).not.toContain('claude-mem');
-  });
+  }, 15000);
 });

@@ -104,12 +104,15 @@ export interface InstallState {
   version?: string;
 }
 
-/** User selections + plugin scope choice produced by the wizard. */
+/** User selections + scope choice produced by the wizard.
+ *  `scope` applies to both plugins (controls cwd of `claude plugin install`)
+ *  and MCP servers (controls which config file is written:
+ *  `~/.claude.json` for global, `<repoRoot>/.mcp.json` for project). */
 export interface InstallPlan {
   selected: CatalogItem[];
   /** Items the user unchecked that were previously installed. Run before `selected`. */
   uninstall?: CatalogItem[];
-  pluginScope: Scope;
+  scope: Scope;
   repoRoot: string | null;
 }
 

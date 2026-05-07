@@ -1,7 +1,7 @@
 import type { CatalogItem, DeferredInteractive, EngineEvent, InstallPlan, McpItem, PostInstallAction } from '../types.js';
 import { isShellItem } from '../types.js';
 import { orderForInstall, orderForUninstall } from './ordering.js';
-import { readMcpConfig, addMcpServer, removeMcpServer, writeMcpConfig, hasMcpServer } from './mcp-config.js';
+import { readMcpConfig, addMcpServer, removeMcpServer, writeMcpConfig, hasMcpServer, mcpConfigPath } from './mcp-config.js';
 
 export interface RichRunResult { exitCode: number; stdout: string; stderr: string }
 export type RichRunner = (cmd: string, opts?: { cwd?: string }) => Promise<RichRunResult>;
@@ -17,31 +17,35 @@ export interface ExecuteOptions {
 }
 
 async function applyMcpInstall(item: McpItem, plan: InstallPlan): Promise<void> {
-  if (!plan.repoRoot) throw new Error(`mcp item ${item.id} requires a project (repoRoot)`);
-  const cfg = await readMcpConfig(plan.repoRoot);
+  const path = mcpConfigPath(plan.scope, plan.repoRoot);
+  const cfg = await readMcpConfig(path);
   if (hasMcpServer(cfg, item.mcpKey)) return; // idempotent skip
   const next = addMcpServer(cfg, item.mcpKey, item.mcpServer);
-  await writeMcpConfig(plan.repoRoot, next);
+  await writeMcpConfig(path, next);
 }
 
 async function applyMcpUninstall(item: McpItem, plan: InstallPlan): Promise<void> {
-  if (!plan.repoRoot) return;
-  const cfg = await readMcpConfig(plan.repoRoot);
+  const path = mcpConfigPath(plan.scope, plan.repoRoot);
+  const cfg = await readMcpConfig(path);
   if (!hasMcpServer(cfg, item.mcpKey)) return;
   const next = removeMcpServer(cfg, item.mcpKey);
-  await writeMcpConfig(plan.repoRoot, next);
+  await writeMcpConfig(path, next);
 }
 
 function resolveCwd(item: CatalogItem, plan: InstallPlan): string | undefined {
   if (item.kind === 'mcp') return undefined;
   if (item.install.cwd === 'repo-root' && plan.repoRoot) return plan.repoRoot;
-  if (item.kind === 'plugin' && plan.pluginScope === 'project' && plan.repoRoot) return plan.repoRoot;
+  if (item.kind === 'plugin' && plan.scope === 'project' && plan.repoRoot) return plan.repoRoot;
   return undefined;
 }
 
 function postCwd(item: CatalogItem, plan: InstallPlan): string | undefined {
   if (plan.repoRoot) return plan.repoRoot;
   return undefined;
+}
+
+function formatShellRecord(cmd: string, cwd?: string): string {
+  return cwd ? `(cd ${cwd} && ${cmd})` : cmd;
 }
 
 const STDERR_TAIL_LINES = 10;
@@ -65,7 +69,8 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
     });
     if (item.kind === 'mcp') {
       if (opts.dryRun) {
-        opts.record?.(`# remove ${item.mcpKey} from .mcp.json`);
+        const path = mcpConfigPath(plan.scope, plan.repoRoot);
+        opts.record?.(`# remove ${item.mcpKey} from ${path} (scope=${plan.scope})`);
       } else {
         try {
           await applyMcpUninstall(item, plan);
@@ -76,7 +81,7 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
       }
     } else {
       if (opts.dryRun) {
-        opts.record?.(item.uninstall!.command);
+        opts.record?.(formatShellRecord(item.uninstall!.command, cwd));
       } else {
         const r = await opts.run(item.uninstall!.command, cwd ? { cwd } : undefined);
         if (r.exitCode !== 0) {
@@ -99,7 +104,8 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
 
     if (item.kind === 'mcp') {
       if (opts.dryRun) {
-        opts.record?.(`# write ${item.mcpKey} to .mcp.json`);
+        const path = mcpConfigPath(plan.scope, plan.repoRoot);
+        opts.record?.(`# write ${item.mcpKey} to ${path} (scope=${plan.scope})`);
       } else {
         try {
           await applyMcpInstall(item, plan);
@@ -110,7 +116,7 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
       }
     } else {
       if (opts.dryRun) {
-        opts.record?.(item.install.command);
+        opts.record?.(formatShellRecord(item.install.command, cwd));
       } else {
         const r = await opts.run(item.install.command, cwd ? { cwd } : undefined);
         if (r.exitCode !== 0) {
@@ -155,7 +161,7 @@ async function runPostInstall(
 
   opts.onEvent({ type: 'post-shell-start', itemId: item.id, label });
   if (opts.dryRun) {
-    opts.record?.(action.value);
+    opts.record?.(formatShellRecord(action.value, postCwd(item, plan)));
   } else {
     const cwd = postCwd(item, plan);
     const r = await opts.run(action.value, cwd ? { cwd } : undefined);

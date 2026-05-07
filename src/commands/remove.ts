@@ -13,7 +13,7 @@ export function planUninstall(items: CatalogItem[], states: InstallState[]): Cat
   return items.filter((i) => installed.has(i.id) && isShellItem(i) && i.uninstall);
 }
 
-export async function runRemove(opts: { yes?: boolean } = {}): Promise<void> {
+export async function runRemove(opts: { yes?: boolean; dryRun?: boolean } = {}): Promise<void> {
   const catalog = await loadCatalog(defaultDeps());
   const repoRoot = await findRepoRoot();
   const states = await detectStates(flattenItems(catalog), undefined, repoRoot);
@@ -29,6 +29,15 @@ export async function runRemove(opts: { yes?: boolean } = {}): Promise<void> {
       ? paint(GLYPHS.tool, 'tool')
       : paint(GLYPHS.plugin, 'plugin');
     console.log(`  ${paint(GLYPHS.remove, 'warn')} ${kindGlyph} ${t.name}`);
+  }
+  if (opts.dryRun) {
+    console.log('\n--- dry run: would run ---');
+    for (const t of targets) {
+      if (!isShellItem(t)) continue;
+      console.log(`  ${t.uninstall!.command}`);
+    }
+    console.log('--- no changes were applied ---');
+    return;
   }
   if (!opts.yes) {
     console.log('\nRe-run with --yes to confirm.');

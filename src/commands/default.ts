@@ -113,7 +113,7 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
 
     try {
       await executeInstall(
-        { selected: [item], pluginScope: 'global', repoRoot: null },
+        { selected: [item], scope: 'global', repoRoot: null },
         {
           run: deps.run,
           onEvent: wrappedOnEvent,

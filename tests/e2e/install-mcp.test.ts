@@ -18,7 +18,7 @@ describe('e2e: install + re-run + uninstall mcp items', () => {
   it('installs both, second run is a no-op, uncheck removes only the unchecked key', async () => {
     const repo = mkdtempSync(join(tmpdir(), 'mcp-e2e-'));
     try {
-      const plan: InstallPlan = { selected: [c7, ms], pluginScope: 'project', repoRoot: repo };
+      const plan: InstallPlan = { selected: [c7, ms], scope: 'project', repoRoot: repo };
 
       // First install
       await executeInstall(plan, { run: async () => ({ exitCode: 0, stdout: '', stderr: '' }), onEvent: () => {}, dryRun: false });
@@ -32,7 +32,7 @@ describe('e2e: install + re-run + uninstall mcp items', () => {
       expect(after).toBe(before);
 
       // Uncheck context7 — should remove only that one
-      const removePlan: InstallPlan = { selected: [ms], uninstall: [c7], pluginScope: 'project', repoRoot: repo };
+      const removePlan: InstallPlan = { selected: [ms], uninstall: [c7], scope: 'project', repoRoot: repo };
       await executeInstall(removePlan, { run: async () => ({ exitCode: 0, stdout: '', stderr: '' }), onEvent: () => {}, dryRun: false });
       cfg = JSON.parse(await fs.readFile(join(repo, '.mcp.json'), 'utf-8'));
       expect(cfg.mcpServers.context7).toBeUndefined();
