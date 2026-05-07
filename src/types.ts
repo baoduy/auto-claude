@@ -86,6 +86,9 @@ export interface CatalogGroup {
   name: string;
   description?: string;
   kind: GroupKind;
+  /** Optional override for which kind-page this group renders on in the wizard.
+   *  Defaults to the dominant kind among items (tool > plugin > mcp tiebreak). */
+  page?: ItemKind;
   items: CatalogItem[];
 }
 

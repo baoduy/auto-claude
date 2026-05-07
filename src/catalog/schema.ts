@@ -63,6 +63,7 @@ export const CatalogGroupSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   kind: z.enum(['pick-one', 'pick-many']),
+  page: z.enum(['tool', 'plugin', 'mcp']).optional(),
   items: z.array(CatalogItemSchema).min(1),
 });
 
