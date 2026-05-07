@@ -121,10 +121,8 @@ export async function executeInstall(plan: InstallPlan, opts: ExecuteOptions): P
     }
     opts.onEvent({ type: 'item-success', itemId: item.id });
 
-    if (item.kind !== 'mcp') {
-      for (const action of item.postInstall ?? []) {
-        await runPostInstall(item, action, plan, opts);
-      }
+    for (const action of item.postInstall ?? []) {
+      await runPostInstall(item, action, plan, opts);
     }
   }
 

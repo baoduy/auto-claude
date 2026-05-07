@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { loadCatalog, type LoaderDeps } from '../../src/catalog/loader.js';
-import bundled from '../../src/catalog/bundled.json' with { type: 'json' };
+import bundled from '../../catalog.json' with { type: 'json' };
 
 const validJson = JSON.stringify(bundled);
+const expectedItemCount = bundled.groups.reduce((sum, g) => sum + g.items.length, 0);
 
 function makeDeps(overrides: Partial<LoaderDeps> = {}): LoaderDeps {
   return {
@@ -21,7 +22,7 @@ describe('loadCatalog', () => {
     const writeCache = vi.fn(async () => {});
     const cat = await loadCatalog(makeDeps({ writeCache }));
     const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
-    expect(totalItems).toBe(13);
+    expect(totalItems).toBe(expectedItemCount);
     expect(writeCache).toHaveBeenCalledOnce();
   });
 
@@ -34,7 +35,7 @@ describe('loadCatalog', () => {
       }),
     }));
     const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
-    expect(totalItems).toBe(13);
+    expect(totalItems).toBe(expectedItemCount);
   });
 
   it('falls back to bundled when network fails and cache is stale', async () => {
@@ -46,7 +47,7 @@ describe('loadCatalog', () => {
       }),
     }));
     const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
-    expect(totalItems).toBe(13);
+    expect(totalItems).toBe(expectedItemCount);
   });
 
   it('falls back to bundled when remote returns malformed json', async () => {
@@ -55,7 +56,7 @@ describe('loadCatalog', () => {
       readCache: async () => null,
     }));
     const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
-    expect(totalItems).toBe(13);
+    expect(totalItems).toBe(expectedItemCount);
   });
 
   it('refresh=true bypasses cache', async () => {

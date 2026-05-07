@@ -48,6 +48,7 @@ const McpItemSchema = z.object({
   kind: z.literal('mcp'),
   mcpKey: z.string().min(1),
   mcpServer: McpServerSchema,
+  postInstall: z.array(PostInstallActionSchema).optional(),
   default: z.boolean().optional(),
 });
 
