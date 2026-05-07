@@ -16,9 +16,16 @@
           "homepage": "https://github.com/thedotmack/claude-mem",
           "defaultScope": "global",
           "default": true,
-          "detect": { "command": "claude plugin list", "versionMatch": "claude-mem" },
-          "install":   { "command": "claude plugin install claude-mem@thedotmack" },
-          "uninstall": { "command": "claude plugin uninstall claude-mem" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "claude-mem"
+          },
+          "install": {
+            "command": "claude plugin install claude-mem@thedotmack"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall claude-mem"
+          }
         },
         {
           "id": "mempalace",
@@ -27,12 +34,24 @@
           "kind": "tool",
           "homepage": "https://github.com/MemPalace/mempalace",
           "defaultScope": "global",
-          "detect":    { "command": "mempalace --version" },
-          "install":   { "command": "pip install mempalace" },
-          "uninstall": { "command": "pip uninstall -y mempalace" },
-          "update":    { "command": "pip install --upgrade mempalace" },
+          "detect": {
+            "command": "mempalace --version"
+          },
+          "install": {
+            "command": "pip install mempalace"
+          },
+          "uninstall": {
+            "command": "pip uninstall -y mempalace"
+          },
+          "update": {
+            "command": "pip install --upgrade mempalace"
+          },
           "postInstall": [
-            { "type": "shell", "value": "claude mcp add mempalace -- mempalace mcp", "label": "Registering MemPalace MCP server" }
+            {
+              "type": "shell",
+              "value": "claude mcp add mempalace -- mempalace mcp",
+              "label": "Registering MemPalace MCP server"
+            }
           ]
         }
       ]
@@ -50,12 +69,25 @@
           "kind": "plugin",
           "homepage": "https://github.com/github/spec-kit",
           "defaultScope": "project",
-          "detect":    { "command": "specify --version" },
-          "install":   { "command": "sh -c 'if ! command -v uv >/dev/null 2>&1; then echo \"Error: uv is required for spec-kit. Install it first with: brew install uv (macOS) — or see https://docs.astral.sh/uv/getting-started/installation/ for other platforms.\" 1>&2; exit 1; fi; uv tool install specify-cli --from git+https://github.com/github/spec-kit.git'" },
-          "uninstall": { "command": "uv tool uninstall specify-cli" },
-          "update":    { "command": "uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git" },
+          "detect": {
+            "command": "specify --version"
+          },
+          "install": {
+            "command": "sh -c 'if ! command -v uv >/dev/null 2>&1; then echo \"Error: uv is required for spec-kit. Install it first with: brew install uv (macOS) — or see https://docs.astral.sh/uv/getting-started/installation/ for other platforms.\" 1>&2; exit 1; fi; uv tool install specify-cli --from git+https://github.com/github/spec-kit.git'"
+          },
+          "uninstall": {
+            "command": "uv tool uninstall specify-cli"
+          },
+          "update": {
+            "command": "uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git"
+          },
           "postInstall": [
-            { "type": "shell", "value": "specify init . --integration claude --force", "requiresRepo": true, "label": "Initializing spec-kit in repo (Claude integration)" }
+            {
+              "type": "shell",
+              "value": "specify init . --integration claude --force",
+              "requiresRepo": true,
+              "label": "Initializing spec-kit in repo (Claude integration)"
+            }
           ]
         },
         {
@@ -65,12 +97,25 @@
           "kind": "plugin",
           "homepage": "https://github.com/Fission-AI/OpenSpec",
           "defaultScope": "project",
-          "detect":    { "command": "openspec --version" },
-          "install":   { "command": "npm install -g @fission-ai/openspec@latest" },
-          "uninstall": { "command": "npm uninstall -g @fission-ai/openspec" },
-          "update":    { "command": "npm install -g @fission-ai/openspec@latest" },
+          "detect": {
+            "command": "openspec --version"
+          },
+          "install": {
+            "command": "npm install -g @fission-ai/openspec@latest"
+          },
+          "uninstall": {
+            "command": "npm uninstall -g @fission-ai/openspec"
+          },
+          "update": {
+            "command": "npm install -g @fission-ai/openspec@latest"
+          },
           "postInstall": [
-            { "type": "shell", "value": "openspec init", "requiresRepo": true, "label": "Initializing OpenSpec in repo" }
+            {
+              "type": "shell",
+              "value": "openspec init",
+              "requiresRepo": true,
+              "label": "Initializing OpenSpec in repo"
+            }
           ]
         }
       ]
@@ -89,13 +134,30 @@
           "homepage": "https://github.com/abhigyanpatwari/GitNexus",
           "defaultScope": "project",
           "default": true,
-          "detect": { "command": "gitnexus --version" },
-          "install":   { "command": "npm install -g gitnexus" },
-          "uninstall": { "command": "npm uninstall -g gitnexus" },
-          "update":    { "command": "npm install -g gitnexus@latest" },
+          "detect": {
+            "command": "gitnexus --version"
+          },
+          "install": {
+            "command": "npm install -g gitnexus"
+          },
+          "uninstall": {
+            "command": "npm uninstall -g gitnexus"
+          },
+          "update": {
+            "command": "npm install -g gitnexus@latest"
+          },
           "postInstall": [
-            { "type": "shell", "value": "claude mcp add gitnexus -- npx -y gitnexus@latest mcp", "label": "Registering gitnexus MCP server" },
-            { "type": "shell", "value": "npx gitnexus analyze", "requiresRepo": true, "label": "Indexing repo into knowledge graph" }
+            {
+              "type": "shell",
+              "value": "claude mcp add gitnexus -- npx -y gitnexus@latest mcp",
+              "label": "Registering gitnexus MCP server"
+            },
+            {
+              "type": "shell",
+              "value": "npx gitnexus analyze",
+              "requiresRepo": true,
+              "label": "Indexing repo into knowledge graph"
+            }
           ]
         },
         {
@@ -105,10 +167,19 @@
           "kind": "tool",
           "homepage": "https://github.com/safishamsi/graphify",
           "defaultScope": "global",
-          "detect": { "command": "graphify --version" },
-          "install":   { "command": "pip install graphifyy && graphify install" },
+          "detect": {
+            "command": "graphify --version"
+          },
+          "install": {
+            "command": "pip install graphifyy && graphify install"
+          },
           "postInstall": [
-            { "type": "shell", "value": "graphify hook install", "requiresRepo": true, "label": "Installing graphify git hook" }
+            {
+              "type": "shell",
+              "value": "graphify hook install",
+              "requiresRepo": true,
+              "label": "Installing graphify git hook"
+            }
           ]
         }
       ]
@@ -126,9 +197,16 @@
           "kind": "plugin",
           "defaultScope": "global",
           "default": false,
-          "detect": { "command": "claude plugin list", "versionMatch": "context7" },
-          "install":   { "command": "claude plugin install context7@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall context7" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "context7"
+          },
+          "install": {
+            "command": "claude plugin install context7@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall context7"
+          }
         },
         {
           "id": "microsoft-docs",
@@ -137,9 +215,16 @@
           "kind": "plugin",
           "defaultScope": "global",
           "default": false,
-          "detect": { "command": "claude plugin list", "versionMatch": "microsoft-docs" },
-          "install":   { "command": "claude plugin install microsoft-docs@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall microsoft-docs" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "microsoft-docs"
+          },
+          "install": {
+            "command": "claude plugin install microsoft-docs@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall microsoft-docs"
+          }
         }
       ]
     },
@@ -156,12 +241,25 @@
           "homepage": "https://github.com/rtk-ai/rtk",
           "defaultScope": "global",
           "default": true,
-          "detect": { "command": "rtk --version" },
-          "install":   { "command": "brew install rtk" },
-          "uninstall": { "command": "brew uninstall rtk" },
-          "update":    { "command": "brew upgrade rtk" },
+          "detect": {
+            "command": "rtk --version"
+          },
+          "install": {
+            "command": "brew install rtk"
+          },
+          "uninstall": {
+            "command": "brew uninstall rtk"
+          },
+          "update": {
+            "command": "brew upgrade rtk"
+          },
           "postInstall": [
-            { "type": "shell", "value": "rtk init -g", "requiresRepo": true, "label": "Initializing rtk in repo" }
+            {
+              "type": "shell",
+              "value": "rtk init -g",
+              "requiresRepo": true,
+              "label": "Initializing rtk in repo"
+            }
           ]
         },
         {
@@ -172,12 +270,24 @@
           "kind": "tool",
           "homepage": "https://github.com/mksglu/context-mode",
           "defaultScope": "global",
-          "detect":    { "command": "context-mode --version" },
-          "install":   { "command": "npm install -g context-mode" },
-          "uninstall": { "command": "npm uninstall -g context-mode" },
-          "update":    { "command": "npm install -g context-mode@latest" },
+          "detect": {
+            "command": "context-mode --version"
+          },
+          "install": {
+            "command": "npm install -g context-mode"
+          },
+          "uninstall": {
+            "command": "npm uninstall -g context-mode"
+          },
+          "update": {
+            "command": "npm install -g context-mode@latest"
+          },
           "postInstall": [
-            { "type": "shell", "value": "claude mcp add context-mode -- npx -y context-mode", "label": "Registering context-mode MCP server" }
+            {
+              "type": "shell",
+              "value": "claude mcp add context-mode -- npx -y context-mode",
+              "label": "Registering context-mode MCP server"
+            }
           ]
         },
         {
@@ -187,10 +297,18 @@
           "kind": "tool",
           "homepage": "https://github.com/getagentseal/codeburn",
           "defaultScope": "global",
-          "detect":    { "command": "codeburn --version" },
-          "install":   { "command": "npm install -g codeburn" },
-          "uninstall": { "command": "npm uninstall -g codeburn" },
-          "update":    { "command": "npm install -g codeburn@latest" }
+          "detect": {
+            "command": "codeburn --version"
+          },
+          "install": {
+            "command": "npm install -g codeburn"
+          },
+          "uninstall": {
+            "command": "npm uninstall -g codeburn"
+          },
+          "update": {
+            "command": "npm install -g codeburn@latest"
+          }
         }
       ]
     },
@@ -206,9 +324,16 @@
           "kind": "plugin",
           "defaultScope": "global",
           "default": true,
-          "detect": { "command": "claude plugin list", "versionMatch": "superpowers" },
-          "install":   { "command": "claude plugin install superpowers@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall superpowers" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "superpowers"
+          },
+          "install": {
+            "command": "claude plugin install superpowers@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall superpowers"
+          }
         },
         {
           "id": "claude-code-setup",
@@ -217,12 +342,22 @@
           "kind": "plugin",
           "defaultScope": "global",
           "default": true,
-          "detect": { "command": "claude plugin list", "versionMatch": "claude-code-setup" },
-          "install":   { "command": "claude plugin install claude-code-setup@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall claude-code-setup" },
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "claude-code-setup"
+          },
+          "install": {
+            "command": "claude plugin install claude-code-setup@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall claude-code-setup"
+          },
           "postInstall": [
-            { "type": "claude-prompt", "label": "Trigger automation recommender",
-              "value": "Ask Claude in this repo: \"recommend automations for this project\"" }
+            {
+              "type": "claude-prompt",
+              "label": "Trigger automation recommender",
+              "value": "Ask Claude in this repo: \"recommend automations for this project\""
+            }
           ]
         },
         {
@@ -231,9 +366,16 @@
           "description": "Toolkit for developing Claude Code plugins (hooks, MCP, commands, agents, best practices)",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect": { "command": "claude plugin list", "versionMatch": "plugin-dev" },
-          "install":   { "command": "claude plugin install plugin-dev@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall plugin-dev" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "plugin-dev"
+          },
+          "install": {
+            "command": "claude plugin install plugin-dev@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall plugin-dev"
+          }
         },
         {
           "id": "microsoft-skills",
@@ -243,9 +385,16 @@
           "homepage": "https://github.com/microsoft/skills",
           "defaultScope": "global",
           "default": false,
-          "detect":    { "command": "claude plugin list", "versionMatch": "skills" },
-          "install":   { "command": "claude plugin marketplace add microsoft/skills && claude plugin install deep-wiki@skills" },
-          "uninstall": { "command": "claude plugin uninstall deep-wiki" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "skills"
+          },
+          "install": {
+            "command": "claude plugin marketplace add microsoft/skills && claude plugin install deep-wiki@skills"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall deep-wiki"
+          }
         },
         {
           "id": "azure-skills",
@@ -255,9 +404,16 @@
           "homepage": "https://github.com/microsoft/azure-skills",
           "defaultScope": "global",
           "default": false,
-          "detect":    { "command": "claude plugin list", "versionMatch": "azure-skills" },
-          "install":   { "command": "claude plugin marketplace add microsoft/azure-skills && claude plugin install azure@azure-skills" },
-          "uninstall": { "command": "claude plugin uninstall azure" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "azure-skills"
+          },
+          "install": {
+            "command": "claude plugin marketplace add microsoft/azure-skills && claude plugin install azure@azure-skills"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall azure"
+          }
         }
       ]
     },
@@ -274,12 +430,25 @@
           "homepage": "https://github.com/rixinhahaha/snip",
           "defaultScope": "global",
           "default": true,
-          "detect":    { "command": "snip --help" },
-          "install":   { "command": "brew install --cask rixinhahaha/snip/snip" },
-          "uninstall": { "command": "brew uninstall --cask snip" },
-          "update":    { "command": "brew upgrade --cask snip" },
+          "detect": {
+            "command": "snip --help"
+          },
+          "install": {
+            "command": "brew install --cask rixinhahaha/snip/snip"
+          },
+          "uninstall": {
+            "command": "brew uninstall --cask snip"
+          },
+          "update": {
+            "command": "brew upgrade --cask snip"
+          },
           "postInstall": [
-            { "type": "shell", "value": "snip setup", "label": "Wiring Snip into Claude Code", "interactive": true }
+            {
+              "type": "shell",
+              "value": "snip setup",
+              "label": "Wiring Snip into Claude Code",
+              "interactive": true
+            }
           ]
         }
       ]
@@ -296,9 +465,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/baoduy/drunk.charts",
           "defaultScope": "project",
-          "detect": { "command": "claude plugin list", "versionMatch": "drunk-app" },
-          "install":   { "command": "claude plugin marketplace add baoduy/drunk.charts && claude plugin install drunk-app@drunk-charts" },
-          "uninstall": { "command": "claude plugin uninstall drunk-app" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "drunk-app"
+          },
+          "install": {
+            "command": "claude plugin marketplace add baoduy/drunk.charts && claude plugin install drunk-app@drunk-charts"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall drunk-app"
+          }
         },
         {
           "id": "dknet-minimal",
@@ -307,9 +483,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/baoduy/DKNet.Templates",
           "defaultScope": "project",
-          "detect": { "command": "claude plugin list", "versionMatch": "dknet-minimal" },
-          "install":   { "command": "claude plugin marketplace add baoduy/DKNet.Templates && claude plugin install dknet-minimal@dknet-marketplace" },
-          "uninstall": { "command": "claude plugin uninstall dknet-minimal" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "dknet-minimal"
+          },
+          "install": {
+            "command": "claude plugin marketplace add baoduy/DKNet.Templates && claude plugin install dknet-minimal@dknet-marketplace"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall dknet-minimal"
+          }
         }
       ]
     },
@@ -328,7 +511,10 @@
           "mcpKey": "context7",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@upstash/context7-mcp"]
+            "args": [
+              "-y",
+              "@upstash/context7-mcp"
+            ]
           }
         },
         {
@@ -340,7 +526,10 @@
           "mcpKey": "microsoft-learn",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@microsoft/mcp-server-learn"]
+            "args": [
+              "-y",
+              "@microsoft/mcp-server-learn"
+            ]
           }
         }
       ]
@@ -358,9 +547,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/mcp-server-dev",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "mcp-server-dev" },
-          "install":   { "command": "claude plugin install mcp-server-dev@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall mcp-server-dev" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "mcp-server-dev"
+          },
+          "install": {
+            "command": "claude plugin install mcp-server-dev@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall mcp-server-dev"
+          }
         },
         {
           "id": "ralph-wiggum",
@@ -369,9 +565,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "ralph-wiggum" },
-          "install":   { "command": "claude plugin marketplace add anthropics/claude-code && claude plugin install ralph-wiggum@claude-code-plugins" },
-          "uninstall": { "command": "claude plugin uninstall ralph-wiggum" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "ralph-wiggum"
+          },
+          "install": {
+            "command": "claude plugin marketplace add anthropics/claude-code && claude plugin install ralph-wiggum@claude-code-plugins"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall ralph-wiggum"
+          }
         },
         {
           "id": "feature-dev",
@@ -380,9 +583,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/anthropics/claude-code/tree/main/plugins/feature-dev",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "feature-dev" },
-          "install":   { "command": "claude plugin install feature-dev@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall feature-dev" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "feature-dev"
+          },
+          "install": {
+            "command": "claude plugin install feature-dev@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall feature-dev"
+          }
         },
         {
           "id": "claude-md-management",
@@ -390,9 +600,16 @@
           "description": "Audits CLAUDE.md quality across many repos and captures session learnings",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "claude-md-management" },
-          "install":   { "command": "claude plugin install claude-md-management@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall claude-md-management" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "claude-md-management"
+          },
+          "install": {
+            "command": "claude plugin install claude-md-management@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall claude-md-management"
+          }
         }
       ]
     },
@@ -408,9 +625,16 @@
           "description": "Configures csharp-ls LSP for go-to-def, find-references, real-time diagnostics on .cs files",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "csharp-lsp" },
-          "install":   { "command": "claude plugin install csharp-lsp@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall csharp-lsp" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "csharp-lsp"
+          },
+          "install": {
+            "command": "claude plugin install csharp-lsp@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall csharp-lsp"
+          }
         },
         {
           "id": "typescript-lsp",
@@ -418,9 +642,16 @@
           "description": "TypeScript / JavaScript LSP for diagnostics and navigation across .ts/.tsx/.js/.jsx/.mts/.cts",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "typescript-lsp" },
-          "install":   { "command": "claude plugin install typescript-lsp@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall typescript-lsp" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "typescript-lsp"
+          },
+          "install": {
+            "command": "claude plugin install typescript-lsp@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall typescript-lsp"
+          }
         },
         {
           "id": "pyright-lsp",
@@ -428,9 +659,16 @@
           "description": "Python type-checking LSP for .py / .pyi files",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "pyright-lsp" },
-          "install":   { "command": "claude plugin install pyright-lsp@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall pyright-lsp" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "pyright-lsp"
+          },
+          "install": {
+            "command": "claude plugin install pyright-lsp@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall pyright-lsp"
+          }
         },
         {
           "id": "rust-lsp",
@@ -439,9 +677,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/zircote/rust-lsp",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "rust-lsp" },
-          "install":   { "command": "claude plugin marketplace add zircote/rust-lsp && claude plugin install rust-lsp@zircote-rust-lsp" },
-          "uninstall": { "command": "claude plugin uninstall rust-lsp" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "rust-lsp"
+          },
+          "install": {
+            "command": "claude plugin marketplace add zircote/rust-lsp && claude plugin install rust-lsp@zircote-rust-lsp"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall rust-lsp"
+          }
         }
       ]
     },
@@ -458,9 +703,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/anthropics/claude-code/tree/main/plugins/code-review",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "code-review" },
-          "install":   { "command": "claude plugin install code-review@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall code-review" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "code-review"
+          },
+          "install": {
+            "command": "claude plugin install code-review@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall code-review"
+          }
         },
         {
           "id": "pr-review-toolkit",
@@ -469,9 +721,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/anthropics/claude-code/tree/main/plugins/pr-review-toolkit",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "pr-review-toolkit" },
-          "install":   { "command": "claude plugin install pr-review-toolkit@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall pr-review-toolkit" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "pr-review-toolkit"
+          },
+          "install": {
+            "command": "claude plugin install pr-review-toolkit@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall pr-review-toolkit"
+          }
         }
       ]
     },
@@ -487,9 +746,16 @@
           "description": "Official GitHub integration — issues, PRs, code review, repo search",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "github" },
-          "install":   { "command": "claude plugin install github@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall github" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "github"
+          },
+          "install": {
+            "command": "claude plugin install github@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall github"
+          }
         },
         {
           "id": "commit-commands",
@@ -497,9 +763,16 @@
           "description": "Git workflow with auto-generated commit messages",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "commit-commands" },
-          "install":   { "command": "claude plugin install commit-commands@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall commit-commands" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "commit-commands"
+          },
+          "install": {
+            "command": "claude plugin install commit-commands@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall commit-commands"
+          }
         }
       ]
     },
@@ -515,9 +788,16 @@
           "description": "Microsoft's Playwright MCP packaged as a Claude Code plugin",
           "kind": "plugin",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "playwright" },
-          "install":   { "command": "claude plugin install playwright@claude-plugins-official" },
-          "uninstall": { "command": "claude plugin uninstall playwright" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "playwright"
+          },
+          "install": {
+            "command": "claude plugin install playwright@claude-plugins-official"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall playwright"
+          }
         },
         {
           "id": "browser-mcp",
@@ -528,7 +808,10 @@
           "mcpKey": "browser-mcp",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@browsermcp/mcp@latest"]
+            "args": [
+              "-y",
+              "@browsermcp/mcp@latest"
+            ]
           }
         }
       ]
@@ -546,9 +829,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/pulumi/agent-skills",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "pulumi-authoring" },
-          "install":   { "command": "claude plugin marketplace add pulumi/agent-skills && claude plugin install pulumi-authoring@pulumi-agent-skills" },
-          "uninstall": { "command": "claude plugin uninstall pulumi-authoring" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "pulumi-authoring"
+          },
+          "install": {
+            "command": "claude plugin marketplace add pulumi/agent-skills && claude plugin install pulumi-authoring@pulumi-agent-skills"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall pulumi-authoring"
+          }
         },
         {
           "id": "pulumi-migration",
@@ -557,9 +847,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/pulumi/agent-skills",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "pulumi-migration" },
-          "install":   { "command": "claude plugin marketplace add pulumi/agent-skills && claude plugin install pulumi-migration@pulumi-agent-skills" },
-          "uninstall": { "command": "claude plugin uninstall pulumi-migration" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "pulumi-migration"
+          },
+          "install": {
+            "command": "claude plugin marketplace add pulumi/agent-skills && claude plugin install pulumi-migration@pulumi-agent-skills"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall pulumi-migration"
+          }
         }
       ]
     },
@@ -576,9 +873,16 @@
           "kind": "plugin",
           "homepage": "https://github.com/cloudflare/skills",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "cloudflare" },
-          "install":   { "command": "claude plugin marketplace add cloudflare/skills && claude plugin install cloudflare@cloudflare" },
-          "uninstall": { "command": "claude plugin uninstall cloudflare" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "cloudflare"
+          },
+          "install": {
+            "command": "claude plugin marketplace add cloudflare/skills && claude plugin install cloudflare@cloudflare"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall cloudflare"
+          }
         },
         {
           "id": "cloudflare-mcp",
@@ -589,8 +893,19 @@
           "mcpKey": "cloudflare",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "mcp-remote", "https://mcp.cloudflare.com/mcp"]
-          }
+            "args": [
+              "-y",
+              "mcp-remote",
+              "https://mcp.cloudflare.com/mcp"
+            ]
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Cloudflare MCP uses a hosted endpoint. The first invocation will open a browser window for OAuth authorization to your Cloudflare account.",
+              "label": "Configuration required"
+            }
+          ]
         }
       ]
     },
@@ -609,8 +924,20 @@
           "mcpKey": "azure",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@azure/mcp@latest", "server", "start"]
-          }
+            "args": [
+              "-y",
+              "@azure/mcp@latest",
+              "server",
+              "start"
+            ]
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Azure MCP uses your local Azure CLI credentials. Run `az login` first if you have not already.",
+              "label": "Configuration required"
+            }
+          ]
         },
         {
           "id": "azure-devops-mcp",
@@ -621,7 +948,10 @@
           "mcpKey": "azure-devops",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@azure-devops/mcp"]
+            "args": [
+              "-y",
+              "@azure-devops/mcp"
+            ]
           }
         },
         {
@@ -633,7 +963,10 @@
           "mcpKey": "microsoft-mcp-catalog",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@microsoft/mcp@latest"]
+            "args": [
+              "-y",
+              "@microsoft/mcp@latest"
+            ]
           }
         },
         {
@@ -645,7 +978,10 @@
           "mcpKey": "m365-agents",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@microsoft/m365agentstoolkit-mcp"]
+            "args": [
+              "-y",
+              "@microsoft/m365agentstoolkit-mcp"
+            ]
           }
         }
       ]
@@ -665,7 +1001,10 @@
           "mcpKey": "kubernetes",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "kubernetes-mcp-server@latest"]
+            "args": [
+              "-y",
+              "kubernetes-mcp-server@latest"
+            ]
           }
         },
         {
@@ -677,19 +1016,37 @@
           "mcpKey": "docker",
           "mcpServer": {
             "command": "docker",
-            "args": ["mcp", "gateway", "run"]
-          }
+            "args": [
+              "mcp",
+              "gateway",
+              "run"
+            ]
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Docker MCP Toolkit requires Docker Desktop with the MCP extension installed. Open Docker Desktop → Extensions → install the MCP Toolkit before using this MCP.",
+              "label": "Configuration required"
+            }
+          ]
         },
         {
-          "id": "k8s-security-policies",
-          "name": "k8s-security-policies",
-          "description": "NetworkPolicies, Pod Security Standards, RBAC, OPA Gatekeeper, mTLS skill (from wshobson/agents kubernetes-operations)",
+          "id": "kubernetes-operations",
+          "name": "kubernetes-operations",
+          "description": "Kubernetes operations skill from wshobson/agents — NetworkPolicies, Pod Security Standards, RBAC, OPA Gatekeeper, mTLS",
           "kind": "plugin",
           "homepage": "https://github.com/wshobson/agents",
           "defaultScope": "global",
-          "detect":    { "command": "claude plugin list", "versionMatch": "kubernetes-operations" },
-          "install":   { "command": "claude plugin marketplace add wshobson/agents && claude plugin install kubernetes-operations@wshobson-agents" },
-          "uninstall": { "command": "claude plugin uninstall kubernetes-operations" }
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "kubernetes-operations"
+          },
+          "install": {
+            "command": "claude plugin marketplace add wshobson/agents && claude plugin install kubernetes-operations@wshobson-agents"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall kubernetes-operations"
+          }
         }
       ]
     },
@@ -708,8 +1065,19 @@
           "mcpKey": "tavily",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "mcp-remote", "https://mcp.tavily.com/mcp/"]
-          }
+            "args": [
+              "-y",
+              "mcp-remote",
+              "https://mcp.tavily.com/mcp/"
+            ]
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Tavily MCP requires TAVILY_API_KEY. Get one at https://app.tavily.com and set it in your shell or .env before using this MCP.",
+              "label": "Configuration required"
+            }
+          ]
         },
         {
           "id": "exa-mcp",
@@ -720,8 +1088,18 @@
           "mcpKey": "exa",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "exa-mcp-server"]
-          }
+            "args": [
+              "-y",
+              "exa-mcp-server"
+            ]
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Exa MCP requires EXA_API_KEY. Get one at https://dashboard.exa.ai and set it in your shell or .env before using this MCP.",
+              "label": "Configuration required"
+            }
+          ]
         },
         {
           "id": "brave-mcp",
@@ -732,8 +1110,18 @@
           "mcpKey": "brave-search",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "@brave/brave-search-mcp-server"]
-          }
+            "args": [
+              "-y",
+              "@brave/brave-search-mcp-server"
+            ]
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Brave Search MCP requires BRAVE_API_KEY. Get one at https://api.search.brave.com and set it in your shell or .env before using this MCP.",
+              "label": "Configuration required"
+            }
+          ]
         },
         {
           "id": "omnisearch-mcp",
@@ -744,8 +1132,18 @@
           "mcpKey": "omnisearch",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "mcp-omnisearch"]
-          }
+            "args": [
+              "-y",
+              "mcp-omnisearch"
+            ]
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Omnisearch MCP aggregates multiple providers. Set the API keys you need (TAVILY_API_KEY, BRAVE_API_KEY, EXA_API_KEY, PERPLEXITY_API_KEY, KAGI_API_KEY, JINA_API_KEY, FIRECRAWL_API_KEY) in your shell or .env. See https://github.com/spences10/mcp-omnisearch for the full list.",
+              "label": "Configuration required"
+            }
+          ]
         }
       ]
     },
@@ -765,7 +1163,14 @@
           "mcpServer": {
             "command": "rust-docs-mcp-server",
             "args": []
-          }
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "rust-docs-mcp-server is a Rust binary. Install it first: `cargo install rust-docs-mcp-server` (requires the Rust toolchain).",
+              "label": "Configuration required"
+            }
+          ]
         },
         {
           "id": "rust-docs-snowmead",
@@ -777,7 +1182,14 @@
           "mcpServer": {
             "command": "rust-docs-mcp",
             "args": []
-          }
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "rust-docs-mcp is a Rust binary. Install it first: `cargo install --git https://github.com/snowmead/rust-docs-mcp` (requires the Rust toolchain).",
+              "label": "Configuration required"
+            }
+          ]
         },
         {
           "id": "mcp-docsrs",
@@ -788,7 +1200,10 @@
           "mcpKey": "mcp-docsrs",
           "mcpServer": {
             "command": "npx",
-            "args": ["-y", "mcp-docsrs"]
+            "args": [
+              "-y",
+              "mcp-docsrs"
+            ]
           }
         }
       ]

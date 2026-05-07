@@ -24,7 +24,6 @@ describe('root catalog.json', () => {
 describe('core-plugins group', () => {
   const catalogs = [
     { label: 'catalog.json',              path: '../../catalog.json' },
-    { label: 'src/catalog/bundled.json',  path: '../../src/catalog/bundled.json' },
   ];
 
   for (const { label, path } of catalogs) {

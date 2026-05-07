@@ -25,9 +25,11 @@ src/
   cli.ts              Commander entrypoint → dispatches to commands/
   types.ts            Catalog / InstallPlan / EngineEvent types
   catalog/
-    bundled.json      Fallback catalog shipped in the npm package
     loader.ts         Fetch + cache (24h) remote catalog, fall back to bundled
     schema.ts         Zod schema for catalog validation
+  (root)
+    catalog.json      Single source of truth — bundled into npm package and
+                      served via the remote raw GitHub URL
   engine/
     detect.ts         Probe whether each item is already installed
     executor.ts       Run install / uninstall / update + post-install actions
@@ -62,7 +64,7 @@ tests/
 
 ### Catalog
 
-Fetched at runtime, cached for 24h; `--refresh-catalog` forces a refetch. `src/catalog/bundled.json` is the shipped fallback so the tool works offline.
+Fetched at runtime, cached for 24h; `--refresh-catalog` forces a refetch. The root `catalog.json` is bundled into the npm package and used as the offline fallback so the tool works offline.
 
 ## Development
 
@@ -88,7 +90,7 @@ Stack: TypeScript (ESM), tsup, Ink 5 + React 18, Commander, Zod, execa, vitest +
 
 ## Adding a new tool/plugin
 
-1. Add an entry to `src/catalog/bundled.json` (validated by `src/catalog/schema.ts`).
+1. Add an entry to `catalog.json` at the repo root (validated by `src/catalog/schema.ts`).
 2. Specify `detect` (how to know it's installed), `install`, ideally `uninstall` + `update`.
 3. If the user must run something or tell Claude something afterward, add `postInstall` actions.
 4. If it's a plugin needing the `claude` CLI, set `kind: 'plugin'` and a sane `defaultScope`.
