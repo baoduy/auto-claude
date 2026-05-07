@@ -18,13 +18,13 @@ describe('e2e: auto-claude default --list', () => {
   it('prints Default tools and Default plugins sections', async () => {
     const r = await execa('node', [cli, 'default', '--list'], { reject: false });
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toMatch(/Default tools:/);
-    expect(r.stdout).toMatch(/Default plugins:/);
+    expect(r.stdout).toMatch(/Memory backend:/);
+    expect(r.stdout).toMatch(/Core plugins & skill packs:/);
   }, 30_000);
 
   it('alias -l works the same way', async () => {
     const r = await execa('node', [cli, 'default', '-l'], { reject: false });
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toMatch(/Default tools:/);
+    expect(r.stdout).toMatch(/Memory backend:/);
   }, 30_000);
 });

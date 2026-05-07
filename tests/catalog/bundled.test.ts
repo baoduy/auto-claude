@@ -13,9 +13,10 @@ describe('bundled catalog', () => {
   it('contains the expected required items', () => {
     const path = fileURLToPath(new URL('../../src/catalog/bundled.json', import.meta.url));
     const json = JSON.parse(readFileSync(path, 'utf-8'));
-    const ids = json.items.map((i: { id: string }) => i.id).sort();
+    const allItems = json.groups.flatMap((g: { items: { id: string }[] }) => g.items);
+    const ids = allItems.map((i: { id: string }) => i.id).sort();
     expect(ids).toEqual([
-      'caveman',
+      'azure-skills',
       'claude-code-setup',
       'claude-mem',
       'context7',
@@ -24,6 +25,7 @@ describe('bundled catalog', () => {
       'gitnexus',
       'graphify',
       'microsoft-docs',
+      'microsoft-skills',
       'plugin-dev',
       'rtk',
       'superpowers',

@@ -20,7 +20,8 @@ describe('loadCatalog', () => {
   it('returns remote catalog and writes cache on success', async () => {
     const writeCache = vi.fn(async () => {});
     const cat = await loadCatalog(makeDeps({ writeCache }));
-    expect(cat.items).toHaveLength(12);
+    const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
+    expect(totalItems).toBe(13);
     expect(writeCache).toHaveBeenCalledOnce();
   });
 
@@ -32,7 +33,8 @@ describe('loadCatalog', () => {
         writtenAt: new Date('2026-05-04T23:00:00Z').getTime(),
       }),
     }));
-    expect(cat.items).toHaveLength(12);
+    const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
+    expect(totalItems).toBe(13);
   });
 
   it('falls back to bundled when network fails and cache is stale', async () => {
@@ -43,7 +45,8 @@ describe('loadCatalog', () => {
         writtenAt: new Date('2026-04-25T00:00:00Z').getTime(), // >7d old
       }),
     }));
-    expect(cat.items).toHaveLength(12);
+    const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
+    expect(totalItems).toBe(13);
   });
 
   it('falls back to bundled when remote returns malformed json', async () => {
@@ -51,7 +54,8 @@ describe('loadCatalog', () => {
       fetchUrl: async () => ({ ok: true, body: '{"not":"valid"}' }),
       readCache: async () => null,
     }));
-    expect(cat.items).toHaveLength(12);
+    const totalItems = cat.groups.reduce((sum, g) => sum + g.items.length, 0);
+    expect(totalItems).toBe(13);
   });
 
   it('refresh=true bypasses cache', async () => {
