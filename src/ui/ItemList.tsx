@@ -9,6 +9,7 @@ export interface ItemListProps {
   states: InstallState[];
   selected: Set<string>;
   cursor: number;
+  showBack?: boolean;
 }
 
 interface RowVisuals {
@@ -57,7 +58,7 @@ function visualsFor(it: CatalogItem, group: CatalogGroup, isSelected: boolean, i
   return { glyph: offGlyph, badge: '', rowColor: isCursor ? COLORS.cursor : undefined, bracketed };
 }
 
-export function ItemList({ catalog, states, selected, cursor }: ItemListProps): React.JSX.Element {
+export function ItemList({ catalog, states, selected, cursor, showBack = false }: ItemListProps): React.JSX.Element {
   const byId = new Map(states.map((s) => [s.itemId, s]));
   let idx = -1;
 
@@ -100,7 +101,9 @@ export function ItemList({ catalog, states, selected, cursor }: ItemListProps): 
         </Box>
       ))}
       <Box marginTop={1} flexDirection="column">
-        <Text dimColor>{GLYPHS.cursor} navigate ↑↓ · space toggle · enter continue · q quit</Text>
+        <Text dimColor>
+          {GLYPHS.cursor} navigate ↑↓ · space toggle · enter continue{showBack ? ' · ← back' : ''} · q quit
+        </Text>
         <Text dimColor>uncheck an installed item to uninstall · [{GLYPHS.locked}] = no uninstaller</Text>
       </Box>
     </Box>

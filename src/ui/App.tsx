@@ -10,7 +10,8 @@ import { PostInstallPanel } from './PostInstallPanel.js';
 import { ConflictPrompt } from './ConflictPrompt.js';
 import { orderForInstall } from '../engine/ordering.js';
 import { Header } from './Header.js';
-import { flattenItems, groupByItemId } from '../catalog/groups.js';
+import { flattenItems, groupByItemId, activeKinds as computeActiveKinds, groupsForKind } from '../catalog/groups.js';
+import { KindPageBreadcrumb } from './KindPageBreadcrumb.js';
 
 type Screen = 'conflict' | 'select' | 'scope' | 'confirm' | 'run' | 'done';
 
@@ -70,9 +71,39 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     return s;
   }, [installedIds, forcedUninstallIds]);
 
+  const activeKinds = useMemo(
+    () => computeActiveKinds(displayCatalog, repoRoot),
+    [displayCatalog, repoRoot],
+  );
+
   const [selected, setSelected] = useState<Set<string>>(new Set(installedIds));
-  const [cursor, setCursor] = useState(0);
+  const [kindPageIndex, setKindPageIndex] = useState(0);
+  const [pageCursors, setPageCursors] = useState<number[]>(() => activeKinds.map(() => 0));
   const [screen, setScreen] = useState<Screen>(initialConflicts.length > 0 ? 'conflict' : 'select');
+
+  // Guard against activeKinds shrinking mid-session.
+  const safePageIndex = Math.min(kindPageIndex, Math.max(0, activeKinds.length - 1));
+  const currentKind = activeKinds[safePageIndex];
+
+  const pageGroups = useMemo(
+    () => (currentKind ? groupsForKind(displayCatalog, currentKind) : []),
+    [displayCatalog, currentKind],
+  );
+  const pageItems = useMemo(
+    () => pageGroups.flatMap((g) => g.items),
+    [pageGroups],
+  );
+  const cursor = Math.min(pageCursors[safePageIndex] ?? 0, Math.max(0, pageItems.length - 1));
+
+  const setCursorForCurrentPage = (next: number | ((c: number) => number)) => {
+    setPageCursors((arr) => {
+      const out = arr.slice();
+      const cur = out[safePageIndex] ?? 0;
+      const value = typeof next === 'function' ? (next as (c: number) => number)(cur) : next;
+      out[safePageIndex] = value;
+      return out;
+    });
+  };
   const [scopeCursor, setScopeCursor] = useState<0 | 1>(0);
   const [pluginScope, setPluginScope] = useState<Scope>('global');
   const [events, setEvents] = useState<EngineEvent[]>([]);
@@ -137,10 +168,13 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     }
 
     if (screen === 'select') {
-      if (key.upArrow) setCursor((c) => Math.max(0, c - 1));
-      else if (key.downArrow) setCursor((c) => Math.min(items.length - 1, c + 1));
-      else if (input === ' ') {
-        const it = items[cursor]!;
+      if (key.upArrow) setCursorForCurrentPage((c) => Math.max(0, c - 1));
+      else if (key.downArrow) setCursorForCurrentPage((c) => Math.min(pageItems.length - 1, c + 1));
+      else if (key.leftArrow || input === 'b') {
+        if (safePageIndex > 0) setKindPageIndex(safePageIndex - 1);
+      } else if (input === ' ') {
+        const it = pageItems[cursor];
+        if (!it) return;
         if (effectiveInstalled.has(it.id) && !(isShellItem(it) && it.uninstall)) return;
         const group = groupOf.get(it.id);
         setSelected((s) => {
@@ -158,6 +192,11 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
           return next;
         });
       } else if (key.return) {
+        if (safePageIndex < activeKinds.length - 1) {
+          setKindPageIndex(safePageIndex + 1);
+          return;
+        }
+        // Last page — same terminal behavior as before.
         if (newSelected.length === 0 && allUninstallIds.length === 0) { onComplete({}); exit(); return; }
         if (hasPlugin && repoRoot) setScreen('scope');
         else setScreen('confirm');
@@ -204,12 +243,20 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
     const adjustedStates: InstallState[] = initialStates.map((s) =>
       effectiveInstalled.has(s.itemId) ? s : { ...s, installed: false }
     );
+    const pageCatalog = { ...displayCatalog, groups: pageGroups };
     body = (
       <Box flexDirection="column">
-        {!repoRoot && hasMcpItems && (
+        <KindPageBreadcrumb kinds={activeKinds} index={safePageIndex} />
+        {!repoRoot && hasMcpItems && safePageIndex === 0 && (
           <Text dimColor>MCP items require a project (no repo detected).</Text>
         )}
-        <ItemList catalog={displayCatalog} states={adjustedStates} selected={selected} cursor={cursor} />
+        <ItemList
+          catalog={pageCatalog}
+          states={adjustedStates}
+          selected={selected}
+          cursor={cursor}
+          showBack={safePageIndex > 0}
+        />
       </Box>
     );
   } else if (screen === 'scope') {
