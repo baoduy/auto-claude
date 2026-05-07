@@ -1,40 +1,45 @@
 {
-  "version": 2,
+  "version": 1,
   "updatedAt": "2026-05-06",
-  "groups": [
+  "items": [
     {
-      "id": "memory",
-      "name": "Memory backend",
-      "description": "Persistent cross-session memory. Pick one — running two memory backends doubles writes and recall.",
-      "kind": "pick-one",
-      "items": [
-        {
-          "id": "claude-mem",
-          "name": "claude-mem",
-          "description": "Persistent cross-session memory for Claude Code",
-          "kind": "plugin",
-          "homepage": "https://github.com/thedotmack/claude-mem",
-          "defaultScope": "global",
-          "default": true,
-          "detect": { "command": "claude plugin list", "versionMatch": "claude-mem" },
-          "install":   { "command": "claude plugin install claude-mem@thedotmack" },
-          "uninstall": { "command": "claude plugin uninstall claude-mem" }
-        },
-        {
-          "id": "mempalace",
-          "name": "MemPalace",
-          "description": "Persistent memory for Claude Code via pip + MCP server",
-          "kind": "tool",
-          "homepage": "https://github.com/MemPalace/mempalace",
-          "defaultScope": "global",
-          "detect":    { "command": "mempalace --version" },
-          "install":   { "command": "pip install mempalace" },
-          "uninstall": { "command": "pip uninstall -y mempalace" },
-          "update":    { "command": "pip install --upgrade mempalace" },
-          "postInstall": [
-            { "type": "shell", "value": "claude mcp add mempalace -- mempalace mcp", "label": "Registering MemPalace MCP server" }
-          ]
-        }
+      "id": "caveman",
+      "name": "caveman",
+      "description": "Claude Code plugin for terse, token-efficient caveman-style responses",
+      "kind": "plugin",
+      "default": true,
+      "homepage": "https://github.com/JuliusBrussee/caveman",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "caveman" },
+      "install":   { "command": "claude plugin marketplace add JuliusBrussee/caveman && claude plugin install caveman@caveman" },
+      "uninstall": { "command": "claude plugin uninstall caveman" }
+    },
+    {
+      "id": "claude-mem",
+      "name": "claude-mem",
+      "description": "Persistent cross-session memory for Claude Code",
+      "kind": "plugin",
+      "default": true,
+      "homepage": "https://github.com/thedotmack/claude-mem",
+      "defaultScope": "global",
+      "detect": { "command": "claude plugin list", "versionMatch": "claude-mem" },
+      "install":   { "command": "claude plugin install claude-mem@thedotmack" },
+      "uninstall": { "command": "claude plugin uninstall claude-mem" }
+    },
+    {
+      "id": "rtk",
+      "name": "rtk",
+      "description": "Rust Token Killer — token-optimized CLI proxy",
+      "kind": "tool",
+      "default": true,
+      "homepage": "https://github.com/rtk-ai/rtk",
+      "defaultScope": "global",
+      "detect": { "command": "rtk --version" },
+      "install":   { "command": "brew install rtk" },
+      "uninstall": { "command": "brew uninstall rtk" },
+      "update":    { "command": "brew upgrade rtk" },
+      "postInstall": [
+        { "type": "shell", "value": "rtk init -g", "requiresRepo": true, "label": "Initializing rtk in repo" }
       ]
     },
     {
