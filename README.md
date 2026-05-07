@@ -18,11 +18,23 @@ Pick the tools and plugins you want from the checklist; auto-claude installs the
 | `npx auto-claude status` | Show installed/missing state |
 | `npx auto-claude remove [--yes]` | Uninstall installed items |
 | `npx auto-claude update [--only <id>]` | Update installed items |
+| `npx auto-claude default` | Silently install all `default: true` items globally (for fleet automation) |
+| `npx auto-claude default --list` (or `-l`) | List default items and their installed state |
 | `npx auto-claude --refresh-catalog` | Bypass the 24h catalog cache |
+
+### Fleet automation
+
+`npx auto-claude default` is non-interactive — no prompts, no TTY required, idempotent. Use it from a bash script to provision every machine in your company:
+
+```bash
+npx -y auto-claude default
+```
+
+Items shipped to every device are flagged `"default": true` in `catalog.json`. The command runs detection first and skips anything already installed, continues past per-item failures, and exits `0` on success, `1` on partial failure, or `2` on catalog load failure.
 
 ## What it installs
 
-The catalog is fetched at runtime; the bundled fallback ships with these:
+The catalog is fetched at runtime; the root `catalog.json` ships with the npm package as the offline fallback:
 
 **Tools**
 - **rtk** — token-optimized CLI proxy (also runs `rtk init -g` in the repo)
@@ -45,3 +57,16 @@ The catalog is fetched at runtime; the bundled fallback ships with these:
 - `claude` CLI (for plugin install)
 - `git` (for project-scoped operations)
 - `pip` (for graphify) and Homebrew (for rtk on macOS)
+
+## Releases
+
+Releases are published automatically by `.github/workflows/npm-publish.yaml`:
+
+- Pushes to `main` (or manual `workflow_dispatch`) compute the next version from
+  the commit log via [`paulhatch/semantic-version`](https://github.com/PaulHatch/semantic-version).
+  Use `(MAJOR)` / `(MINOR)` in commit subjects to bump major/minor; otherwise patch.
+- The workflow runs `pnpm typecheck && pnpm test && pnpm build`, updates
+  `package.json`, creates a tagged GitHub Release, and publishes to npm.
+
+**Required secret:** `NPM_TOKEN` — npm automation token with **Publish** permission.
+Add it under *Settings → Secrets and variables → Actions* on the GitHub repo.

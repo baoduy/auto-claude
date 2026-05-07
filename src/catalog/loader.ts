@@ -3,9 +3,9 @@ import type { Catalog } from '../types.js';
 import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import bundledJson from './bundled.json' with { type: 'json' };
+import bundledJson from '../../catalog.json' with { type: 'json' };
 
-const REMOTE_URL = 'https://raw.githubusercontent.com/<owner>/auto-claude/main/catalog.json';
+const REMOTE_URL = 'https://raw.githubusercontent.com/baoduy/auto-claude/main/catalog.json';
 const FETCH_TIMEOUT_MS = 5000;
 const STALE_CACHE_MAX_MS = 7 * 24 * 60 * 60 * 1000;
 

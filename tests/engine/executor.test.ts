@@ -22,7 +22,7 @@ const plug: CatalogItem = {
 
 const plan = (overrides: Partial<InstallPlan> = {}): InstallPlan => ({
   selected: [tool, rtk, plug],
-  pluginScope: 'global',
+  scope: 'global',
   repoRoot: '/repo',
   ...overrides,
 });
@@ -78,7 +78,7 @@ describe('executeInstall', () => {
     expect(recorded).toEqual([
       'npm i -g cm',
       'npm i -g rtk',
-      'rtk init -g',
+      '(cd /repo && rtk init -g)',
       'claude plugin install superpowers@x',
     ]);
   });
@@ -93,14 +93,14 @@ describe('executeInstall', () => {
     expect(calls).toEqual(['npm i -g rtk']); // rtk init -g skipped
   });
 
-  it('plugin install runs in repoRoot cwd when pluginScope=project', async () => {
+  it('plugin install runs in repoRoot cwd when scope=project', async () => {
     const cwds: (string | undefined)[] = [];
     const run = async (cmd: string, opts?: { cwd?: string }) => {
       cwds.push(opts?.cwd);
       return { exitCode: 0, stdout: '', stderr: '' };
     };
     await executeInstall(
-      plan({ selected: [plug], pluginScope: 'project', repoRoot: '/repo' }),
+      plan({ selected: [plug], scope: 'project', repoRoot: '/repo' }),
       { run: run as never, onEvent: () => {}, dryRun: false },
     );
     expect(cwds[0]).toBe('/repo');

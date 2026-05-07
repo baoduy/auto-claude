@@ -14,6 +14,8 @@ Claude Code is most useful with a stack of supporting tools (rtk, gitnexus, grap
 | `npx auto-claude status` | Show installed/missing state per catalog item |
 | `npx auto-claude remove [--yes]` | Uninstall installed items |
 | `npx auto-claude update [--only <id>]` | Update installed items |
+| `npx auto-claude default` | Silently install all `default: true` items globally (for fleet automation) |
+| `npx auto-claude default --list` (or `-l`) | List default items and their installed state |
 | `npx auto-claude --refresh-catalog` | Bypass the 24h catalog cache |
 
 ## Architecture
@@ -23,9 +25,11 @@ src/
   cli.ts              Commander entrypoint → dispatches to commands/
   types.ts            Catalog / InstallPlan / EngineEvent types
   catalog/
-    bundled.json      Fallback catalog shipped in the npm package
     loader.ts         Fetch + cache (24h) remote catalog, fall back to bundled
     schema.ts         Zod schema for catalog validation
+  (root)
+    catalog.json      Single source of truth — bundled into npm package and
+                      served via the remote raw GitHub URL
   engine/
     detect.ts         Probe whether each item is already installed
     executor.ts       Run install / uninstall / update + post-install actions
@@ -60,7 +64,7 @@ tests/
 
 ### Catalog
 
-Fetched at runtime, cached for 24h; `--refresh-catalog` forces a refetch. `src/catalog/bundled.json` is the shipped fallback so the tool works offline.
+Fetched at runtime, cached for 24h; `--refresh-catalog` forces a refetch. The root `catalog.json` is bundled into the npm package and used as the offline fallback so the tool works offline.
 
 ## Development
 
@@ -86,7 +90,7 @@ Stack: TypeScript (ESM), tsup, Ink 5 + React 18, Commander, Zod, execa, vitest +
 
 ## Adding a new tool/plugin
 
-1. Add an entry to `src/catalog/bundled.json` (validated by `src/catalog/schema.ts`).
+1. Add an entry to `catalog.json` at the repo root (validated by `src/catalog/schema.ts`).
 2. Specify `detect` (how to know it's installed), `install`, ideally `uninstall` + `update`.
 3. If the user must run something or tell Claude something afterward, add `postInstall` actions.
 4. If it's a plugin needing the `claude` CLI, set `kind: 'plugin'` and a sane `defaultScope`.
@@ -98,3 +102,47 @@ Stack: TypeScript (ESM), tsup, Ink 5 + React 18, Commander, Zod, execa, vitest +
 - `claude` CLI (for plugin install)
 - `git` (for project-scoped operations)
 - `pip` (for graphify), Homebrew (for rtk on macOS)
+
+<!-- gitnexus:start -->
+# GitNexus — Code Intelligence
+
+This project is indexed by GitNexus as **auto-claude** (765 symbols, 828 relationships, 3 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+
+> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
+
+## Always Do
+
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
+- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
+- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
+- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
+- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
+
+## Never Do
+
+- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
+- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
+- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
+
+## Resources
+
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/auto-claude/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/auto-claude/clusters` | All functional areas |
+| `gitnexus://repo/auto-claude/processes` | All execution flows |
+| `gitnexus://repo/auto-claude/process/{name}` | Step-by-step execution trace |
+
+## CLI
+
+| Task | Read this skill file |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+
+<!-- gitnexus:end -->

@@ -8,7 +8,7 @@ export default defineConfig({
   clean: true,
   bundle: true,
   splitting: false,
-  sourcemap: true,
+  sourcemap: false,
   banner: { js: '#!/usr/bin/env node' },
   loader: { '.json': 'json' },
 });
