@@ -106,6 +106,14 @@ is_claude_desktop_installed_windows() {
 
 OS="$(detect_os)"
 
+is_nodejs_installed() {
+  command -v node >/dev/null 2>&1
+}
+
+is_npx_installed() {
+  command -v npx >/dev/null 2>&1
+}
+
 case "$OS" in
   macos)   is_claude_desktop_installed_macos   && installed=1 || installed=0 ;;
   linux)   is_claude_desktop_installed_linux   && installed=1 || installed=0 ;;
@@ -117,9 +125,19 @@ case "$OS" in
 esac
 
 if [[ "$installed" -eq 1 ]]; then
+  if ! is_nodejs_installed; then
+    echo "Node.js is not installed. Please install Node.js to continue."
+    exit 1
+  fi
+
+  if ! is_npx_installed; then
+    echo "npx is not available. Please install npm/npx to continue."
+    exit 1
+  fi
+
   echo "Claude Desktop detected on $OS. Running auto-claude default + update..."
-  npx @drunkcoding/auto-claude default
-  npx @drunkcoding/auto-claude update
+  npx --yes --package @drunkcoding/auto-claude auto-claude default
+  npx --yes --package @drunkcoding/auto-claude auto-claude update
   echo "Done."
 else
   echo "Claude Desktop is not installed on $OS. Skipping auto-claude commands."
