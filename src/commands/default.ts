@@ -1,4 +1,5 @@
 import type { CatalogItem, EngineEvent, InstallState } from '../types.js';
+import { isShellItem } from '../types.js';
 import { detectStates, realShellRunner } from '../engine/detect.js';
 import { loadCatalog, defaultDeps } from '../catalog/loader.js';
 import { findRepoRoot } from '../engine/project.js';
@@ -6,7 +7,7 @@ import { executeInstall } from '../engine/executor.js';
 import { orderForInstall } from '../engine/ordering.js';
 import { printHeader } from '../ui/Header.js';
 import { GLYPHS, paint } from '../ui/theme.js';
-import { flattenItems } from '../catalog/groups.js';
+import { flattenItems, findDefaultConflicts } from '../catalog/groups.js';
 
 export interface RunDefaultListOptions {
   refreshCatalog?: boolean;
@@ -62,6 +63,7 @@ function formatRow(item: CatalogItem, state: InstallState | undefined): string {
 
 export interface RunDefaultInstallDeps {
   items: CatalogItem[];
+  catalog?: import('../types.js').Catalog;
   repoRoot?: string | null;
   detect: (items: CatalogItem[]) => Promise<InstallState[]>;
   run: (cmd: string, opts?: { cwd?: string }) => Promise<{ exitCode: number; stdout: string; stderr: string }>;
@@ -75,10 +77,11 @@ export interface DefaultInstallResult {
   ok: number;
   failed: number;
   skipped: number;
+  conflicts: number;
 }
 
 export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<DefaultInstallResult> {
-  const result: DefaultInstallResult = { ok: 0, failed: 0, skipped: 0 };
+  const result: DefaultInstallResult = { ok: 0, failed: 0, skipped: 0, conflicts: 0 };
   if (deps.items.length === 0) {
     deps.log('default: nothing to do (no items flagged default: true)');
     return result;
@@ -87,6 +90,57 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
   const ordered = orderForInstall(deps.items);
   const states = await deps.detect(ordered);
   const installedIds = new Set(states.filter((s) => s.installed).map((s) => s.itemId));
+
+  const blockedDefaults = new Set<string>();
+  const swapUninstalls: CatalogItem[] = [];
+  const swapBatchDefaults = new Set<string>();
+
+  if (deps.catalog) {
+    const conflicts = findDefaultConflicts(deps.catalog, installedIds);
+    for (const c of conflicts) {
+      for (const sib of c.driftedSiblings) {
+        if (isShellItem(sib) && sib.uninstall) {
+          swapUninstalls.push(sib);
+          swapBatchDefaults.add(c.defaultItem.id);
+          deps.log(paint(
+            `${GLYPHS.info} conflict in "${c.groupName}": ${sib.id} drift from default ${c.defaultItem.id}; uninstalling sibling`,
+            'warn',
+          ));
+        } else {
+          blockedDefaults.add(c.defaultItem.id);
+          deps.log(paint(
+            `${GLYPHS.info} conflict in "${c.groupName}": ${sib.id} installed but has no uninstall command; skipping ${c.defaultItem.id}`,
+            'warn',
+          ));
+          result.conflicts++;
+        }
+      }
+    }
+  }
+
+  if (swapUninstalls.length > 0) {
+    const wrappedOnEventForSwap = (e: EngineEvent) => {
+      if (e.type === 'post-prompt') return;
+      deps.onEvent(e);
+    };
+    try {
+      await executeInstall(
+        { selected: [], uninstall: swapUninstalls, scope: 'global', repoRoot: deps.repoRoot ?? null },
+        {
+          run: deps.run,
+          onEvent: wrappedOnEventForSwap,
+          dryRun: !!deps.dryRun,
+          record: deps.dryRun ? (cmd) => deps.log(paint(`  $ ${cmd}`, 'dim')) : undefined,
+        },
+      );
+      for (const it of swapUninstalls) installedIds.delete(it.id);
+    } catch (e) {
+      deps.err(paint(`${GLYPHS.fail} swap-uninstall failed: ${(e as Error).message}`, 'fail'));
+      result.failed++;
+      // Block every default whose sibling we attempted to uninstall — invariant: never install a default while its conflicting sibling is on disk.
+      for (const id of swapBatchDefaults) blockedDefaults.add(id);
+    }
+  }
 
   for (const item of ordered) {
     if (item.kind === 'mcp' && !deps.repoRoot) {
@@ -98,6 +152,11 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
       deps.log(paint(`${GLYPHS.recycle} ${item.id} already installed`, 'dim'));
       result.skipped++;
       result.ok++;
+      continue;
+    }
+
+    if (blockedDefaults.has(item.id)) {
+      // already counted via result.conflicts++ during conflict detection
       continue;
     }
 
@@ -132,7 +191,7 @@ export async function runDefaultInstall(deps: RunDefaultInstallDeps): Promise<De
 
   const summaryColor = result.failed > 0 ? 'fail' : 'ok';
   const dryNote = deps.dryRun ? ' [dry-run]' : '';
-  deps.log(paint(`default${dryNote}: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped`, summaryColor));
+  deps.log(paint(`default${dryNote}: ${result.ok} ok, ${result.failed} failed, ${result.skipped} skipped, ${result.conflicts} conflicts`, summaryColor));
   return result;
 }
 
@@ -163,6 +222,7 @@ export async function runDefault(opts: RunDefaultOptions = {}): Promise<void> {
 
   const result = await runDefaultInstall({
     items: defaults,
+    catalog,
     repoRoot,
     detect: (items) => detectStates(items, undefined, repoRoot),
     run: richRun,
