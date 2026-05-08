@@ -8,7 +8,7 @@
     "access": "public"
   },
   "bin": {
-    "auto-claude": "./dist/cli.js"
+    "auto-claude": "dist/cli.js"
   },
   "files": [
     "dist",
