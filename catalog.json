@@ -11,6 +11,7 @@
         {
           "id": "claude-mem",
           "name": "claude-mem",
+          "default": true,
           "description": "Persistent cross-session memory for Claude Code",
           "kind": "plugin",
           "homepage": "https://github.com/thedotmack/claude-mem",
@@ -29,7 +30,7 @@
         {
           "id": "cavemem",
           "name": "cavemem",
-          "default": true,
+          "default": false,
           "description": "Cross-agent persistent memory via compressed local SQLite + MCP",
           "kind": "plugin",
           "homepage": "https://github.com/JuliusBrussee/cavemem",
