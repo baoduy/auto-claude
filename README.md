@@ -37,7 +37,7 @@ Items shipped to every device are flagged `"default": true` in `catalog.json`. T
 The catalog is fetched at runtime; the root `catalog.json` ships with the npm package as the offline fallback:
 
 **Defaults installed by `npx @drunkcoding/auto-claude default` (`default: true`):**
-- `cavemem`, `gitnexus`, `rtk`, `context-mode`, `superpowers`, `claude-code-setup`, `caveman`, `snip`
+- `caveman`, `cavemem`, `claude-code-setup`, `context-mode`, `gitnexus`, `rtk`, `snip`, `superpowers`
 
 **Current catalog groups in `catalog.json`:**
 - **Memory backend** (`pick-one`): `claude-mem`, `cavemem`, `mempalace`
