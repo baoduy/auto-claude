@@ -136,8 +136,8 @@ if [[ "$installed" -eq 1 ]]; then
   fi
 
   echo "Claude Desktop detected on $OS. Running auto-claude default + update..."
-  npx --yes --package @drunkcoding/auto-claude auto-claude default
-  npx --yes --package @drunkcoding/auto-claude auto-claude update
+  npx --yes @drunkcoding/auto-claude@latest default
+  npx --yes @drunkcoding/auto-claude@latest update
   echo "Done."
 else
   echo "Claude Desktop is not installed on $OS. Skipping auto-claude commands."

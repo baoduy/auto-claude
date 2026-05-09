@@ -40,9 +40,9 @@ if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
 
 if (Test-ClaudeDesktopInstalled) {
     Write-Host "Claude Desktop detected on Windows. Running auto-claude default + update..."
-    & npx @drunkcoding/auto-claude default
+    & npx --yes @drunkcoding/auto-claude@latest default
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    & npx @drunkcoding/auto-claude update
+    & npx --yes @drunkcoding/auto-claude@latest update
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "Done."
 } else {
