@@ -36,20 +36,30 @@ Items shipped to every device are flagged `"default": true` in `catalog.json`. T
 
 The catalog is fetched at runtime; the root `catalog.json` ships with the npm package as the offline fallback:
 
-**Tools**
-- **rtk** — token-optimized CLI proxy (also runs `rtk init -g` in the repo)
-- **graphify** — knowledge-graph builder for your codebase, surfaced via `/graphify`
-- **gitnexus** — code-intelligence MCP server; indexes your repo into a graph
+**Defaults installed by `npx @drunkcoding/auto-claude default` (`default: true`):**
+- `cavemem`, `gitnexus`, `rtk`, `context-mode`, `superpowers`, `claude-code-setup`, `caveman`, `snip`
 
-**Plugins**
-- **claude-mem** — persistent cross-session memory
-- **superpowers** — skills framework
-- **claude-code-setup** — automation recommender
-- **microsoft-docs** — Microsoft / Azure / .NET docs and samples
-- **context7** — version-specific library docs pulled into LLM context
-- **plugin-dev** — toolkit for developing Claude Code plugins
-- **drunk-app** — assistant for configuring drunk-app Helm chart deployments
-- **dknet-minimal** — vertical-slice features on DKNet.Minimal.Template (.NET 10)
+**Current catalog groups in `catalog.json`:**
+- **Memory backend** (`pick-one`): `claude-mem`, `cavemem`, `mempalace`
+- **Spec-driven workflow** (`pick-one`): `spec-kit`, `open-spec`
+- **Code intelligence / KG** (`pick-one`): `gitnexus`, `graphify`
+- **Documentation providers** (`pick-many`): `context7`, `microsoft-docs`
+- **Context & token optimization** (`pick-many`): `rtk`, `context-mode`, `codeburn`
+- **Core plugins & skill packs** (`pick-many`): `superpowers`, `claude-code-setup`, `plugin-dev`, `caveman`, `microsoft/skills`, `microsoft/azure-skills`
+- **Visual tooling** (`pick-many`): `snip`
+- **Project-specific templates** (`pick-many`): `drunk-app`, `dknet-minimal`
+- **MCP servers (project)** (`pick-many`): `context7-mcp`, `microsoft-learn-mcp`
+- **Agent orchestration & authoring** (`pick-many`): `mcp-server-dev`, `ralph-wiggum`, `feature-dev`, `claude-md-management`
+- **Language LSPs** (`pick-many`): `csharp-lsp`, `typescript-lsp`, `pyright-lsp`, `rust-lsp`
+- **Code review** (`pick-many`): `code-review`, `pr-review-toolkit`
+- **Git / VCS workflow** (`pick-many`): `github`, `commit-commands`
+- **Browser testing & automation** (`pick-many`): `playwright`, `browser-mcp`
+- **Pulumi authoring & migration** (`pick-many`): `pulumi-authoring`, `pulumi-migration`
+- **Cloudflare** (`pick-many`): `cloudflare`, `cloudflare-mcp`
+- **Microsoft / Azure MCPs** (`pick-many`): `azure-mcp`, `azure-devops-mcp`, `microsoft-mcp-catalog`, `m365-agents-mcp`
+- **Container / orchestration runtime** (`pick-many`): `kubernetes-mcp`, `docker-mcp-toolkit`, `kubernetes-operations`
+- **Web search MCPs** (`pick-many`): `tavily-mcp`, `exa-mcp`, `brave-mcp`, `omnisearch-mcp`
+- **Rust docs.rs MCPs** (`pick-many`): `rust-docs-govcraft`, `rust-docs-snowmead`, `mcp-docsrs`
 
 ## Requirements
 
