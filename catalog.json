@@ -29,7 +29,6 @@
         {
           "id": "cavemem",
           "name": "cavemem",
-          "default": true,
           "description": "Cross-agent persistent memory via compressed local SQLite + MCP",
           "kind": "plugin",
           "homepage": "https://github.com/JuliusBrussee/cavemem",
@@ -152,7 +151,6 @@
           "kind": "tool",
           "homepage": "https://github.com/abhigyanpatwari/GitNexus",
           "defaultScope": "project",
-          "default": true,
           "detect": {
             "kind": "npm",
             "package": "gitnexus"
@@ -260,7 +258,6 @@
           "kind": "tool",
           "homepage": "https://github.com/rtk-ai/rtk",
           "defaultScope": "global",
-          "default": true,
           "detect": {
             "command": "rtk --version"
           },
@@ -285,7 +282,6 @@
         {
           "id": "context-mode",
           "name": "context-mode",
-          "default": true,
           "description": "MCP server that sandboxes tool output and indexes session events — ~98% context reduction",
           "kind": "tool",
           "homepage": "https://github.com/mksglu/context-mode",
@@ -345,7 +341,6 @@
           "description": "Claude Code plugin: skills framework",
           "kind": "plugin",
           "defaultScope": "global",
-          "default": true,
           "detect": {
             "command": "claude plugin list",
             "versionMatch": "superpowers"
@@ -363,7 +358,6 @@
           "description": "Claude Code plugin: automation recommender",
           "kind": "plugin",
           "defaultScope": "global",
-          "default": true,
           "detect": {
             "command": "claude plugin list",
             "versionMatch": "claude-code-setup"
@@ -402,7 +396,6 @@
         {
           "id": "caveman",
           "name": "caveman",
-          "default": true,
           "description": "Claude plugin that compresses responses to reduce output token usage",
           "kind": "plugin",
           "homepage": "https://github.com/JuliusBrussee/caveman",
@@ -470,7 +463,6 @@
           "kind": "tool",
           "homepage": "https://github.com/rixinhahaha/snip",
           "defaultScope": "global",
-          "default": true,
           "detect": {
             "command": "snip --help"
           },

@@ -43,8 +43,6 @@ interface BaseCatalogItem {
   name: string;
   description: string;
   homepage?: string;
-  /** When true, included by `auto-claude default` (silent fleet install). */
-  default?: boolean;
   /** When true, hidden from every command surface (wizard, status, update, remove). */
   disabled?: boolean;
 }

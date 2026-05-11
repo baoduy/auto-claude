@@ -41,7 +41,6 @@ describe('core-plugins group', () => {
         const item = group?.items.find((i: { id: string }) => i.id === 'microsoft-skills');
         expect(item, 'microsoft-skills item must exist in core-plugins').toBeDefined();
         expect(item.kind).toBe('plugin');
-        expect(item.default).toBeFalsy();
         expect(item.homepage).toBe('https://github.com/microsoft/skills');
       });
 
@@ -51,7 +50,6 @@ describe('core-plugins group', () => {
         const item = group?.items.find((i: { id: string }) => i.id === 'azure-skills');
         expect(item, 'azure-skills item must exist in core-plugins').toBeDefined();
         expect(item.kind).toBe('plugin');
-        expect(item.default).toBeFalsy();
         expect(item.homepage).toBe('https://github.com/microsoft/azure-skills');
       });
     });

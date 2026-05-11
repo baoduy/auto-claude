@@ -42,7 +42,6 @@ const ShellItemBase = {
   uninstall: CommandSpecSchema.optional(),
   update: CommandSpecSchema.optional(),
   postInstall: z.array(PostInstallActionSchema).optional(),
-  default: z.boolean().optional(),
   disabled: z.boolean().optional(),
 };
 
@@ -57,7 +56,6 @@ const McpItemSchema = z.object({
   mcpKey: z.string().min(1),
   mcpServer: McpServerSchema,
   postInstall: z.array(PostInstallActionSchema).optional(),
-  default: z.boolean().optional(),
   disabled: z.boolean().optional(),
 });
 
@@ -91,22 +89,17 @@ export const CatalogSchema = z.object({
     }
     seenGroups.add(group.id);
 
-    let defaultCount = 0;
     for (const item of group.items) {
       if (seenItems.has(item.id)) {
         ctx.addIssue({ code: 'custom', message: `duplicate item id: ${item.id}` });
       }
       seenItems.add(item.id);
-      if (item.default) defaultCount++;
       if (item.kind === 'mcp') {
         if (seenMcpKeys.has(item.mcpKey)) {
           ctx.addIssue({ code: 'custom', message: `duplicate mcpKey: ${item.mcpKey}` });
         }
         seenMcpKeys.add(item.mcpKey);
       }
-    }
-    if (group.kind === 'pick-one' && defaultCount > 1) {
-      ctx.addIssue({ code: 'custom', message: `at most one default:true allowed in pick-one group "${group.id}"` });
     }
   }
 });
