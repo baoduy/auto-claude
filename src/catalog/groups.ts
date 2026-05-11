@@ -50,34 +50,3 @@ export function activeKinds(catalog: Catalog, repoRoot: string | null): ItemKind
 export function groupsForKind(catalog: Catalog, kind: ItemKind): CatalogGroup[] {
   return catalog.groups.filter((g) => pageOf(g) === kind);
 }
-
-export interface DefaultConflict {
-  groupId: string;
-  groupName: string;
-  defaultItem: CatalogItem;
-  driftedSiblings: CatalogItem[];
-}
-
-/**
- * Detect `pick-one` groups where the catalog's `default: true` sibling is not
- * the installed one (or is installed alongside another sibling). Skips groups
- * that have zero or multiple `default: true` items (ambiguous policy).
- */
-export function findDefaultConflicts(
-  catalog: Catalog,
-  installedIds: Set<string>,
-): DefaultConflict[] {
-  const out: DefaultConflict[] = [];
-  for (const g of catalog.groups) {
-    if (g.kind !== 'pick-one') continue;
-    const defaults = g.items.filter((i) => i.default === true);
-    if (defaults.length !== 1) continue;
-    const defaultItem = defaults[0]!;
-    const driftedSiblings = g.items.filter(
-      (i) => i.id !== defaultItem.id && installedIds.has(i.id),
-    );
-    if (driftedSiblings.length === 0) continue;
-    out.push({ groupId: g.id, groupName: g.name, defaultItem, driftedSiblings });
-  }
-  return out;
-}

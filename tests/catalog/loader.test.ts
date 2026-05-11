@@ -64,4 +64,16 @@ describe('loadCatalog', () => {
     await loadCatalog({ ...makeDeps({ fetchUrl }), refresh: true });
     expect(fetchUrl).toHaveBeenCalledOnce();
   });
+
+  it('drops disabled items from loaded catalog', async () => {
+    const tampered = JSON.parse(validJson);
+    tampered.groups[0].items[0].disabled = true;
+    const droppedId = tampered.groups[0].items[0].id;
+    const tamperedJson = JSON.stringify(tampered);
+    const cat = await loadCatalog(makeDeps({
+      fetchUrl: async () => ({ ok: true, body: tamperedJson }),
+    }));
+    const all = cat.groups.flatMap((g) => g.items.map((i) => i.id));
+    expect(all).not.toContain(droppedId);
+  });
 });

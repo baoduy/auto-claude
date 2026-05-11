@@ -1,4 +1,5 @@
 import { CatalogSchema } from './schema.js';
+import { filterDisabled } from './filter-disabled.js';
 import type { Catalog } from '../types.js';
 import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
@@ -54,13 +55,13 @@ export async function loadCatalog(deps: LoaderDeps): Promise<Catalog> {
   }
 
   // 4. Bundled fallback
-  return bundled;
+  return filterDisabled(bundled);
 }
 
 function tryParse(json: string): Catalog | null {
   try {
     const obj = JSON.parse(json);
-    return CatalogSchema.parse(obj);
+    return filterDisabled(CatalogSchema.parse(obj));
   } catch {
     return null;
   }

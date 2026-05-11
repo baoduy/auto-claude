@@ -14,8 +14,6 @@ Claude Code is most useful with a stack of supporting tools (rtk, gitnexus, grap
 | `npx auto-claude status` | Show installed/missing state per catalog item |
 | `npx auto-claude remove [--yes]` | Uninstall installed items |
 | `npx auto-claude update [--only <id>]` | Update installed items |
-| `npx auto-claude default` | Silently install all `default: true` items globally (for fleet automation) |
-| `npx auto-claude default --list` (or `-l`) | List default items and their installed state |
 | `npx auto-claude --refresh-catalog` | Bypass the 24h catalog cache |
 
 ## Architecture

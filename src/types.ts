@@ -7,8 +7,6 @@ export interface PostInstallAction {
   value: string;
   requiresRepo?: boolean;
   label?: string;
-  /** If true, defer until after the Ink wizard exits and run with the real TTY. */
-  interactive?: boolean;
 }
 
 export interface CommandSpec {
@@ -45,8 +43,8 @@ interface BaseCatalogItem {
   name: string;
   description: string;
   homepage?: string;
-  /** When true, included by `auto-claude default` (silent fleet install). */
-  default?: boolean;
+  /** When true, hidden from every command surface (wizard, status, update, remove). */
+  disabled?: boolean;
 }
 
 export interface ToolItem extends BaseCatalogItem {
@@ -101,6 +99,8 @@ export interface CatalogGroup {
   /** Optional override for which kind-page this group renders on in the wizard.
    *  Defaults to the dominant kind among items (tool > plugin > mcp tiebreak). */
   page?: ItemKind;
+  /** When true, the whole group is hidden from every command surface. */
+  disabled?: boolean;
   items: CatalogItem[];
 }
 
@@ -138,15 +138,5 @@ export type EngineEvent =
   | { type: 'post-shell-start'; itemId: string; label: string }
   | { type: 'post-shell-success'; itemId: string }
   | { type: 'post-shell-failure'; itemId: string; exitCode: number; stderrTail: string }
-  | { type: 'post-shell-deferred'; itemId: string; label: string }
   | { type: 'post-prompt'; itemId: string; label: string; value: string }
   | { type: 'done' };
-
-/** Post-install actions that need a real TTY — run after Ink unmounts. */
-export interface DeferredInteractive {
-  itemId: string;
-  itemName: string;
-  label: string;
-  command: string;
-  cwd?: string;
-}
