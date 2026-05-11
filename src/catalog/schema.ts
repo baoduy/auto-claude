@@ -44,6 +44,7 @@ const ShellItemBase = {
   update: CommandSpecSchema.optional(),
   postInstall: z.array(PostInstallActionSchema).optional(),
   default: z.boolean().optional(),
+  disabled: z.boolean().optional(),
 };
 
 const ToolItemSchema = z.object({ ...ShellItemBase, kind: z.literal('tool') });
@@ -58,6 +59,7 @@ const McpItemSchema = z.object({
   mcpServer: McpServerSchema,
   postInstall: z.array(PostInstallActionSchema).optional(),
   default: z.boolean().optional(),
+  disabled: z.boolean().optional(),
 });
 
 export const CatalogItemSchema = z.discriminatedUnion('kind', [
@@ -72,6 +74,7 @@ export const CatalogGroupSchema = z.object({
   description: z.string().optional(),
   kind: z.enum(['pick-one', 'pick-many']),
   page: z.enum(['tool', 'plugin', 'mcp']).optional(),
+  disabled: z.boolean().optional(),
   items: z.array(CatalogItemSchema).min(1),
 });
 

@@ -156,3 +156,40 @@ describe('CatalogGroup.page', () => {
     expect(r.success).toBe(false);
   });
 });
+
+describe('disabled flag', () => {
+  it('accepts disabled:true on item', () => {
+    const cat = {
+      version: 2,
+      updatedAt: '2026-05-11',
+      groups: [{
+        id: 'g1', name: 'g1', kind: 'pick-many',
+        items: [{
+          id: 'a', name: 'a', description: '', kind: 'tool',
+          defaultScope: 'global',
+          detect: { command: 'a --v' },
+          install: { command: 'true' },
+          disabled: true,
+        }],
+      }],
+    };
+    expect(() => CatalogSchema.parse(cat)).not.toThrow();
+  });
+
+  it('accepts disabled:true on group', () => {
+    const cat = {
+      version: 2,
+      updatedAt: '2026-05-11',
+      groups: [{
+        id: 'g1', name: 'g1', kind: 'pick-many', disabled: true,
+        items: [{
+          id: 'a', name: 'a', description: '', kind: 'tool',
+          defaultScope: 'global',
+          detect: { command: 'a --v' },
+          install: { command: 'true' },
+        }],
+      }],
+    };
+    expect(() => CatalogSchema.parse(cat)).not.toThrow();
+  });
+});
