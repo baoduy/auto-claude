@@ -64,9 +64,9 @@ export async function streamInstall(plan: InstallPlan, opts: StreamOptions = {})
   for (const item of uninstalls) {
     step++;
     write(`\n── [${step}/${total}] Uninstall ${item.name} ──\n`);
-    const ok = await runOne(item, 'uninstall');
+    const { ok, exitCode } = await runOne(item, 'uninstall');
     if (!ok) {
-      const choice = await onFailure({ itemId: item.id, label: `Uninstall ${item.name}`, exitCode: 1 });
+      const choice = await onFailure({ itemId: item.id, label: `Uninstall ${item.name}`, exitCode });
       result.failed.push(item.id);
       if (choice === 'abort') return summarize(result, write);
       continue;
@@ -77,36 +77,37 @@ export async function streamInstall(plan: InstallPlan, opts: StreamOptions = {})
   for (const item of installs) {
     step++;
     write(`\n── [${step}/${total}] ${item.name} ──\n`);
-    const ok = await runOne(item, 'install');
+    const { ok, exitCode } = await runOne(item, 'install');
     if (!ok) {
-      const choice = await onFailure({ itemId: item.id, label: item.name, exitCode: 1 });
+      const choice = await onFailure({ itemId: item.id, label: item.name, exitCode });
       result.failed.push(item.id);
       if (choice === 'abort') return summarize(result, write);
       continue;
     }
     result.succeeded.push(item.id);
     for (const action of item.postInstall ?? []) {
-      await runPostInstall(item, action, result, runShell, onFailure, write, plan);
+      const postResult = await runPostInstall(item, action, result, runShell, onFailure, write, plan);
+      if (postResult === 'abort') return summarize(result, write);
     }
   }
 
   return summarize(result, write);
 
-  async function runOne(item: CatalogItem, phase: 'install' | 'uninstall'): Promise<boolean> {
+  async function runOne(item: CatalogItem, phase: 'install' | 'uninstall'): Promise<{ ok: boolean; exitCode: number }> {
     if (item.kind === 'mcp') {
       try {
         if (phase === 'install' && opts.mcpInstall) await opts.mcpInstall(item, plan);
         if (phase === 'uninstall' && opts.mcpUninstall) await opts.mcpUninstall(item, plan);
-        return true;
+        return { ok: true, exitCode: 0 };
       } catch (err: unknown) {
         write(`✗ ${(err as Error)?.message ?? err}\n`);
-        return false;
+        return { ok: false, exitCode: 1 };
       }
     }
     const cmd = phase === 'install' ? item.install.command : item.uninstall!.command;
     const cwd = resolveCwd(item, plan);
     const r = await runShell(cmd, cwd ? { cwd } : undefined);
-    return r.exitCode === 0;
+    return { ok: r.exitCode === 0, exitCode: r.exitCode };
   }
 }
 
@@ -118,11 +119,11 @@ async function runPostInstall(
   onFailure: NonNullable<StreamOptions['onFailure']>,
   write: (s: string) => void,
   plan: InstallPlan,
-): Promise<void> {
-  if (action.requiresRepo && !plan.repoRoot) return;
+): Promise<'continue' | 'abort'> {
+  if (action.requiresRepo && !plan.repoRoot) return 'continue';
   if (action.type === 'claude-prompt') {
     result.claudePrompts.push({ label: action.label ?? '', value: action.value });
-    return;
+    return 'continue';
   }
   const label = action.label ?? action.value;
   write(`\n  → ${item.name}: ${label}\n`);
@@ -130,8 +131,9 @@ async function runPostInstall(
   const r = await runShell(action.value, cwd ? { cwd } : undefined);
   if (r.exitCode !== 0) {
     const choice = await onFailure({ itemId: item.id, label: `${item.name} post-install: ${label}`, exitCode: r.exitCode });
-    if (choice === 'abort') throw new Error(`aborted at post-install for ${item.id}`);
+    if (choice === 'abort') return 'abort';
   }
+  return 'continue';
 }
 
 function summarize(result: StreamResult, write: (s: string) => void): StreamResult {
