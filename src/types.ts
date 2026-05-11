@@ -47,6 +47,8 @@ interface BaseCatalogItem {
   homepage?: string;
   /** When true, included by `auto-claude default` (silent fleet install). */
   default?: boolean;
+  /** When true, hidden from every command surface (wizard, status, update, remove). */
+  disabled?: boolean;
 }
 
 export interface ToolItem extends BaseCatalogItem {
@@ -101,6 +103,8 @@ export interface CatalogGroup {
   /** Optional override for which kind-page this group renders on in the wizard.
    *  Defaults to the dominant kind among items (tool > plugin > mcp tiebreak). */
   page?: ItemKind;
+  /** When true, the whole group is hidden from every command surface. */
+  disabled?: boolean;
   items: CatalogItem[];
 }
 
