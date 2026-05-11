@@ -487,8 +487,7 @@
             {
               "type": "shell",
               "value": "snip setup",
-              "label": "Wiring Snip into Claude Code",
-              "interactive": true
+              "label": "Wiring Snip into Claude Code"
             }
           ]
         }

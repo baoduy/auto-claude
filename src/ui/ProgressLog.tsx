@@ -35,9 +35,6 @@ function reduce(events: EngineEvent[]): Line[] {
         if (last) last.status = 'fail';
         break;
       }
-      case 'post-shell-deferred':
-        lines.push({ id: e.itemId, label: '↳ ' + e.label + ' (will run after wizard exits)', status: 'ok', index: 0, total: 0, isPost: true });
-        break;
     }
   }
   return lines;

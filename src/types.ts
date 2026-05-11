@@ -7,8 +7,6 @@ export interface PostInstallAction {
   value: string;
   requiresRepo?: boolean;
   label?: string;
-  /** If true, defer until after the Ink wizard exits and run with the real TTY. */
-  interactive?: boolean;
 }
 
 export interface CommandSpec {
@@ -142,15 +140,5 @@ export type EngineEvent =
   | { type: 'post-shell-start'; itemId: string; label: string }
   | { type: 'post-shell-success'; itemId: string }
   | { type: 'post-shell-failure'; itemId: string; exitCode: number; stderrTail: string }
-  | { type: 'post-shell-deferred'; itemId: string; label: string }
   | { type: 'post-prompt'; itemId: string; label: string; value: string }
   | { type: 'done' };
-
-/** Post-install actions that need a real TTY — run after Ink unmounts. */
-export interface DeferredInteractive {
-  itemId: string;
-  itemName: string;
-  label: string;
-  command: string;
-  cwd?: string;
-}
