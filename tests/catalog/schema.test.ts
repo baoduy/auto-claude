@@ -17,7 +17,7 @@ const validCatalog = {
   updatedAt: '2026-05-05',
   groups: [
     { id: 'g1', name: 'G1', kind: 'pick-many', items: [baseItem('a'), baseItem('b')] },
-    { id: 'g2', name: 'G2', kind: 'pick-one', items: [baseItem('c', { default: true }), baseItem('d')] },
+    { id: 'g2', name: 'G2', kind: 'pick-one', items: [baseItem('c'), baseItem('d')] },
   ],
 };
 
@@ -55,33 +55,6 @@ describe('CatalogSchema v2', () => {
     expect(() => CatalogSchema.parse(bad)).toThrow(/duplicate group id/i);
   });
 
-  it('rejects multiple default:true in a pick-one group', () => {
-    const bad = {
-      version: 2,
-      updatedAt: '2026-05-05',
-      groups: [
-        { id: 'g1', name: 'G1', kind: 'pick-one', items: [
-          baseItem('a', { default: true }),
-          baseItem('b', { default: true }),
-        ] },
-      ],
-    };
-    expect(() => CatalogSchema.parse(bad)).toThrow(/at most one default/i);
-  });
-
-  it('allows multiple default:true in a pick-many group', () => {
-    const ok = {
-      version: 2,
-      updatedAt: '2026-05-05',
-      groups: [
-        { id: 'g1', name: 'G1', kind: 'pick-many', items: [
-          baseItem('a', { default: true }),
-          baseItem('b', { default: true }),
-        ] },
-      ],
-    };
-    expect(() => CatalogSchema.parse(ok)).not.toThrow();
-  });
 });
 
 import { CatalogItemSchema } from '../../src/catalog/schema.js';
@@ -154,5 +127,42 @@ describe('CatalogGroup.page', () => {
       groups: [{ ...baseGroup, page: 'banana' }],
     });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('disabled flag', () => {
+  it('accepts disabled:true on item', () => {
+    const cat = {
+      version: 2,
+      updatedAt: '2026-05-11',
+      groups: [{
+        id: 'g1', name: 'g1', kind: 'pick-many',
+        items: [{
+          id: 'a', name: 'a', description: '', kind: 'tool',
+          defaultScope: 'global',
+          detect: { command: 'a --v' },
+          install: { command: 'true' },
+          disabled: true,
+        }],
+      }],
+    };
+    expect(() => CatalogSchema.parse(cat)).not.toThrow();
+  });
+
+  it('accepts disabled:true on group', () => {
+    const cat = {
+      version: 2,
+      updatedAt: '2026-05-11',
+      groups: [{
+        id: 'g1', name: 'g1', kind: 'pick-many', disabled: true,
+        items: [{
+          id: 'a', name: 'a', description: '', kind: 'tool',
+          defaultScope: 'global',
+          detect: { command: 'a --v' },
+          install: { command: 'true' },
+        }],
+      }],
+    };
+    expect(() => CatalogSchema.parse(cat)).not.toThrow();
   });
 });

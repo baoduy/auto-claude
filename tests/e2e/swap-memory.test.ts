@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { App } from '../../src/ui/App.js';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import type { Catalog, EngineEvent, InstallPlan } from '../../src/types.js';
+import type { Catalog, InstallPlan } from '../../src/types.js';
 
 const catalog: Catalog = {
   version: 2, updatedAt: '2026-05-05',
@@ -20,9 +20,6 @@ const catalog: Catalog = {
 describe('e2e: memory swap', () => {
   it('selecting MemPalace when claude-mem is installed produces a plan that uninstalls claude-mem and installs MemPalace', async () => {
     let captured: InstallPlan | null = null;
-    const runInstall = vi.fn(async (plan: InstallPlan, _onEvent?: (e: EngineEvent) => void) => {
-      captured = plan;
-    });
     const { stdin } = render(
       React.createElement(App, {
         catalog,
@@ -31,8 +28,9 @@ describe('e2e: memory swap', () => {
           { itemId: 'mempalace', installed: false },
         ],
         repoRoot: null,
-        runInstall,
-        onComplete: () => {},
+        onComplete: (r: { aborted?: boolean; plan?: InstallPlan }) => {
+          if (r.plan) captured = r.plan;
+        },
       }),
     );
     // No conflict (only one installed). select screen: cursor 0 = claude-mem (preselected).
@@ -42,9 +40,9 @@ describe('e2e: memory swap', () => {
     await new Promise((r) => setTimeout(r, 20));
     stdin.write(' '); // toggle mempalace
     await new Promise((r) => setTimeout(r, 20));
-    stdin.write('\r'); // confirm
+    stdin.write('\r'); // enter -> confirm screen
     await new Promise((r) => setTimeout(r, 20));
-    stdin.write('\r'); // run
+    stdin.write('\r'); // enter on confirm -> onComplete
     await new Promise((r) => setTimeout(r, 50));
     expect(captured).not.toBeNull();
     expect(captured!.selected.map((i) => i.id)).toEqual(['mempalace']);
@@ -53,7 +51,6 @@ describe('e2e: memory swap', () => {
 
   it('out-of-band: both installed → conflict screen → keep mempalace → uninstall claude-mem', async () => {
     let captured: InstallPlan | null = null;
-    const runInstall = vi.fn(async (plan: InstallPlan) => { captured = plan; });
     const { stdin, lastFrame } = render(
       React.createElement(App, {
         catalog,
@@ -62,8 +59,9 @@ describe('e2e: memory swap', () => {
           { itemId: 'mempalace', installed: true },
         ],
         repoRoot: null,
-        runInstall,
-        onComplete: () => {},
+        onComplete: (r: { aborted?: boolean; plan?: InstallPlan }) => {
+          if (r.plan) captured = r.plan;
+        },
       }),
     );
     // Conflict screen up. Cursor on claude-mem; press down to MemPalace, enter.
@@ -73,10 +71,10 @@ describe('e2e: memory swap', () => {
     await new Promise((r) => setTimeout(r, 20));
     stdin.write('\r'); // select mempalace to keep
     await new Promise((r) => setTimeout(r, 20));
-    // Now on select screen. Press enter to confirm everything.
-    stdin.write('\r'); // confirm
+    // Now on select screen. Press enter to advance to confirm.
+    stdin.write('\r'); // confirm screen
     await new Promise((r) => setTimeout(r, 20));
-    stdin.write('\r'); // run
+    stdin.write('\r'); // enter on confirm -> onComplete
     await new Promise((r) => setTimeout(r, 50));
     expect(captured!.uninstall?.map((i) => i.id)).toContain('claude-mem');
     expect(captured!.selected.map((i) => i.id)).not.toContain('claude-mem');

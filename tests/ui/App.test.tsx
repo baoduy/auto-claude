@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render } from 'ink-testing-library';
 import { App } from '../../src/ui/App.js';
-import type { Catalog, CatalogItem, EngineEvent, InstallPlan, InstallState } from '../../src/types.js';
+import type { Catalog, CatalogItem, InstallPlan, InstallState } from '../../src/types.js';
 import { flattenItems } from '../../src/catalog/groups.js';
 import bundled from '../../catalog.json' with { type: 'json' };
 
@@ -33,7 +33,7 @@ describe('<App>', () => {
     const { stdin, lastFrame } = render(
       <App
         catalog={catalog} initialStates={states} repoRoot={null}
-        runInstall={async () => {}} onComplete={onComplete}
+        onComplete={onComplete}
       />
     );
     expect(lastFrame()).toMatch(/Tools\s*\(1\//);
@@ -65,7 +65,7 @@ describe('<App>', () => {
     ];
     const { stdin, lastFrame } = render(
       <App catalog={fixture} initialStates={fState} repoRoot={'/repo'}
-           runInstall={async () => {}} onComplete={onComplete} />
+           onComplete={onComplete} />
     );
     await new Promise((r) => setTimeout(r, 10));
     // Tools page: don't toggle, just advance.
@@ -98,8 +98,7 @@ describe('<App>', () => {
         catalog={catalog}
         initialStates={[{ itemId: 'a', installed: false }, { itemId: 'b', installed: false }]}
         repoRoot={null}
-        runInstall={async (plan) => { received = plan; }}
-        onComplete={() => {}}
+        onComplete={(r) => { if (r.plan) received = r.plan; }}
       />,
     );
     stdin.write(' ');         // select a
@@ -108,9 +107,9 @@ describe('<App>', () => {
     await new Promise((r) => setTimeout(r, 20));
     stdin.write(' ');         // select b (should deselect a)
     await new Promise((r) => setTimeout(r, 20));
-    stdin.write('\r');        // enter -> confirm
+    stdin.write('\r');        // enter -> confirm screen
     await new Promise((r) => setTimeout(r, 20));
-    stdin.write('\r');        // enter -> run
+    stdin.write('\r');        // enter on confirm -> onComplete
     await new Promise((r) => setTimeout(r, 100));
     expect((received as InstallPlan | null)?.selected.map((i: CatalogItem) => i.id)).toEqual(['b']);
   });
@@ -132,7 +131,6 @@ describe('<App>', () => {
         catalog={mcpCatalog}
         initialStates={[]}
         repoRoot={null}
-        runInstall={async () => {}}
         onComplete={() => {}}
       />
     );
@@ -159,17 +157,16 @@ describe('<App>', () => {
         catalog={catalog}
         initialStates={[{ itemId: 'a', installed: true }, { itemId: 'b', installed: false }]}
         repoRoot={null}
-        runInstall={async (plan) => { received = plan; }}
-        onComplete={() => {}}
+        onComplete={(r) => { if (r.plan) received = r.plan; }}
       />,
     );
     stdin.write('\x1b[B');  // down to b
     await new Promise((r) => setTimeout(r, 20));
     stdin.write(' ');         // select b
     await new Promise((r) => setTimeout(r, 20));
-    stdin.write('\r');        // enter -> confirm
+    stdin.write('\r');        // enter -> confirm screen
     await new Promise((r) => setTimeout(r, 20));
-    stdin.write('\r');        // enter -> run
+    stdin.write('\r');        // enter on confirm -> onComplete
     await new Promise((r) => setTimeout(r, 100));
     const plan = received as InstallPlan | null;
     expect(plan?.selected.map((i: CatalogItem) => i.id)).toEqual(['b']);
@@ -194,7 +191,7 @@ describe('<App>', () => {
     const { stdin, lastFrame } = render(
       <App catalog={fixture}
            initialStates={[{ itemId: 't1', installed: false }, { itemId: 'p1', installed: false }]}
-           repoRoot={'/repo'} runInstall={async () => {}} onComplete={onComplete} />
+           repoRoot={'/repo'} onComplete={onComplete} />
     );
     await new Promise((r) => setTimeout(r, 10));
     expect(lastFrame()).toMatch(/Tools\s*\(1\/2\)/);
@@ -219,7 +216,7 @@ describe('<App>', () => {
     const { lastFrame } = render(
       <App catalog={fixture}
            initialStates={[{ itemId: 'p1', installed: false }]}
-           repoRoot={'/repo'} runInstall={async () => {}} onComplete={() => {}} />
+           repoRoot={'/repo'} onComplete={() => {}} />
     );
     await new Promise((r) => setTimeout(r, 10));
     const frame = lastFrame() ?? '';
@@ -245,8 +242,7 @@ describe('<App>', () => {
       <App catalog={fixture}
            initialStates={[{ itemId: 'm-plugin', installed: false }, { itemId: 'm-tool', installed: false }]}
            repoRoot={'/repo'}
-           runInstall={async (plan) => { received = plan; }}
-           onComplete={() => {}} />
+           onComplete={(r) => { if (r.plan) received = r.plan; }} />
     );
     await new Promise((r) => setTimeout(r, 10));
     // Single page = plugin. Toggle first item (m-plugin), then ↓ + space (m-tool) to flip the pick-one.
@@ -256,12 +252,12 @@ describe('<App>', () => {
     await new Promise((r) => setTimeout(r, 10));
     stdin.write(' ');
     await new Promise((r) => setTimeout(r, 10));
-    stdin.write('\r'); // enter — last page, no plugins so goes to confirm
+    stdin.write('\r'); // enter — last page, has plugins so goes to scope
     await new Promise((r) => setTimeout(r, 10));
-    // We need to choose scope and confirm to get runInstall called. Press enter on global, then enter on confirm.
+    // Choose scope (global) and confirm.
     stdin.write('\r'); // scope = global
     await new Promise((r) => setTimeout(r, 10));
-    stdin.write('\r'); // confirm
+    stdin.write('\r'); // confirm -> onComplete
     await new Promise((r) => setTimeout(r, 50));
     expect(received).not.toBeNull();
     const ids = (received as unknown as InstallPlan).selected.map((i) => i.id);

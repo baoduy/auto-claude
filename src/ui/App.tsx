@@ -1,12 +1,10 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
-import type { Catalog, CatalogGroup, CatalogItem, EngineEvent, InstallPlan, InstallState, Scope } from '../types.js';
+import type { Catalog, CatalogGroup, CatalogItem, InstallPlan, InstallState, Scope } from '../types.js';
 import { isShellItem } from '../types.js';
 import { ItemList } from './ItemList.js';
 import { ScopePrompt, type ScopeKindGroup } from './ScopePrompt.js';
 import { ConfirmSummary, type ConfirmKindGroup } from './ConfirmSummary.js';
-import { ProgressLog } from './ProgressLog.js';
-import { PostInstallPanel } from './PostInstallPanel.js';
 import { ConflictPrompt } from './ConflictPrompt.js';
 import { orderForInstall } from '../engine/ordering.js';
 import { Header } from './Header.js';
@@ -15,14 +13,13 @@ import { KindPageBreadcrumb } from './KindPageBreadcrumb.js';
 import { useTerminalRows } from './useTerminalRows.js';
 import { useMeasuredHeight } from './useMeasuredHeight.js';
 
-type Screen = 'conflict' | 'select' | 'scope' | 'confirm' | 'run' | 'done';
+type Screen = 'conflict' | 'select' | 'scope' | 'confirm';
 
 export interface AppProps {
   catalog: Catalog;
   initialStates: InstallState[];
   repoRoot: string | null;
-  runInstall: (plan: InstallPlan, onEvent: (e: EngineEvent) => void) => Promise<void>;
-  onComplete: (r: { aborted?: boolean; error?: string }) => void;
+  onComplete: (r: { aborted?: boolean; plan?: InstallPlan }) => void;
 }
 
 interface ConflictItem { group: CatalogGroup; installedIds: string[] }
@@ -37,7 +34,7 @@ function findConflicts(catalog: Catalog, installedIds: Set<string>): ConflictIte
   return out;
 }
 
-export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }: AppProps): React.JSX.Element {
+export function App({ catalog, initialStates, repoRoot, onComplete }: AppProps): React.JSX.Element {
   const { exit } = useApp();
 
   const HEADER_ROWS = 2; // compact Header: brand glyph line + marginBottom
@@ -113,8 +110,6 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
   };
   const [scopeCursor, setScopeCursor] = useState<0 | 1>(0);
   const [scope, setScope] = useState<Scope>('global');
-  const [events, setEvents] = useState<EngineEvent[]>([]);
-  const [runError, setRunError] = useState<string | null>(null);
 
   const newSelected = [...selected].filter((id) => !effectiveInstalled.has(id));
   const userUninstallIds = [...effectiveInstalled].filter((id) => {
@@ -167,7 +162,7 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
   }, []);
 
   useInput((input, key) => {
-    if (input === 'q' && screen !== 'run') {
+    if (input === 'q') {
       onComplete({ aborted: true });
       exit();
       return;
@@ -222,30 +217,17 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       }
     } else if (screen === 'confirm') {
       if (key.return) {
-        setScreen('run');
         const plan: InstallPlan = {
           selected: newSelected.map((id) => items.find((i) => i.id === id)!),
           uninstall: allUninstallIds.map((id) => items.find((i) => i.id === id)!),
           scope,
           repoRoot,
         };
-        runInstall(plan, (e) => setEvents((evs) => [...evs, e]))
-          .then(() => { setScreen('done'); })
-          .catch((err) => { setRunError(String(err)); setScreen('done'); });
+        onComplete({ plan });
+        exit();
       }
-    } else if (screen === 'done') {
-      if (key.return) { onComplete(runError ? { error: runError } : {}); exit(); }
     }
   });
-
-  const hasPrompt = events.some((e) => e.type === 'post-prompt');
-  useEffect(() => {
-    if (screen !== 'done') return;
-    if (runError) return;
-    if (hasPrompt) return;
-    onComplete({});
-    exit();
-  }, [screen, runError, hasPrompt, onComplete, exit]);
 
   let body: React.JSX.Element;
   if (screen === 'conflict' && pendingConflicts[0]) {
@@ -325,22 +307,8 @@ export function App({ catalog, initialStates, repoRoot, runInstall, onComplete }
       buildKind('mcp', 'MCP servers'),
     ];
     body = <ConfirmSummary groups={confirmGroups} />;
-  } else if (screen === 'run') {
-    body = <ProgressLog events={events} />;
   } else {
-    body = (
-      <Box flexDirection="column">
-        <ProgressLog events={events} />
-        {runError && (
-          <Box marginTop={1} flexDirection="column">
-            <Text color="red">Run failed: {runError}</Text>
-            <Text dimColor>See the failure event above for the stderr tail.</Text>
-          </Box>
-        )}
-        <Box marginTop={1}><PostInstallPanel events={events} /></Box>
-        <Box marginTop={1}><Text dimColor>enter to exit</Text></Box>
-      </Box>
-    );
+    body = <Text dimColor>Loading…</Text>;
   }
 
   return (
