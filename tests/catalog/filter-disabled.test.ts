@@ -27,7 +27,7 @@ describe('filterDisabled', () => {
   it('drops disabled items', () => {
     const cat = mkCat([{ id: 'g1', items: [mkItem('a'), mkItem('b', true)] }]);
     const out = filterDisabled(cat);
-    expect(out.groups[0].items.map((i) => i.id)).toEqual(['a']);
+    expect(out.groups[0]!.items.map((i) => i.id)).toEqual(['a']);
   });
 
   it('drops disabled groups', () => {
@@ -51,6 +51,6 @@ describe('filterDisabled', () => {
   it('keeps non-disabled items in a partially disabled group', () => {
     const cat = mkCat([{ id: 'g1', items: [mkItem('a'), mkItem('b', true), mkItem('c')] }]);
     const out = filterDisabled(cat);
-    expect(out.groups[0].items.map((i) => i.id)).toEqual(['a', 'c']);
+    expect(out.groups[0]!.items.map((i) => i.id)).toEqual(['a', 'c']);
   });
 });
