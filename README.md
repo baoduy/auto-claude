@@ -18,26 +18,15 @@ Pick the tools and plugins you want from the checklist; @drunkcoding/auto-claude
 | `npx @drunkcoding/auto-claude status` | Show installed/missing state |
 | `npx @drunkcoding/auto-claude remove [--yes]` | Uninstall installed items |
 | `npx @drunkcoding/auto-claude update [--only <id>]` | Update installed items |
-| `npx @drunkcoding/auto-claude default` | Silently install all `default: true` items globally (for fleet automation) |
-| `npx @drunkcoding/auto-claude default --list` (or `-l`) | List default items and their installed state |
 | `npx @drunkcoding/auto-claude --refresh-catalog` | Bypass the 24h catalog cache |
 
-### Fleet automation
+### Wizard flow
 
-`npx @drunkcoding/auto-claude default` is non-interactive — no prompts, no TTY required, idempotent. Use it from a bash script to provision every machine in your company:
-
-```bash
-npx -y @drunkcoding/auto-claude default
-```
-
-Items shipped to every device are flagged `"default": true` in `catalog.json`. The command runs detection first and skips anything already installed, continues past per-item failures, and exits `0` on success, `1` on partial failure, or `2` on catalog load failure.
+After you confirm, the wizard exits and each install/uninstall/post-install command runs in your real terminal with inherited stdio. You can answer any prompts (sudo password, "trust this marketplace?", API-key questions) directly. On failure, you'll be asked `[c]ontinue / [a]bort?`.
 
 ## What it installs
 
 The catalog is fetched at runtime; the root `catalog.json` ships with the npm package as the offline fallback:
-
-**Defaults installed by `npx @drunkcoding/auto-claude default` (`default: true`):**
-- `caveman`, `cavemem`, `claude-code-setup`, `context-mode`, `gitnexus`, `rtk`, `snip`, `superpowers`
 
 **Current catalog groups in `catalog.json`:**
 - **Memory backend** (`pick-one`): `claude-mem`, `cavemem`, `mempalace`
@@ -60,6 +49,10 @@ The catalog is fetched at runtime; the root `catalog.json` ships with the npm pa
 - **Container / orchestration runtime** (`pick-many`): `kubernetes-mcp`, `docker-mcp-toolkit`, `kubernetes-operations`
 - **Web search MCPs** (`pick-many`): `tavily-mcp`, `exa-mcp`, `brave-mcp`, `omnisearch-mcp`
 - **Rust docs.rs MCPs** (`pick-many`): `rust-docs-govcraft`, `rust-docs-snowmead`, `mcp-docsrs`
+
+### Hiding items
+
+Set `"disabled": true` on a catalog item to remove it from every command surface (wizard, status, update, remove). Set it on a group to hide the whole group. Empty groups left over after item filtering are also dropped.
 
 ## Requirements
 
