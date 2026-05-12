@@ -314,6 +314,7 @@
           "kind": "tool",
           "homepage": "https://github.com/getagentseal/codeburn",
           "defaultScope": "global",
+          "default": false,
           "detect": {
             "kind": "npm",
             "package": "codeburn"
@@ -326,6 +327,27 @@
           },
           "update": {
             "command": "npm install -g codeburn@latest"
+          }
+        },
+        {
+          "id": "claudoscope",
+          "name": "Claudoscope",
+          "description": "Native macOS menu-bar app — real-time Claude Code session dashboard, cost analytics, secret scanning, config health",
+          "kind": "tool",
+          "homepage": "https://github.com/cordwainersmith/Claudoscope",
+          "defaultScope": "global",
+          "default": false,
+          "detect": {
+            "command": "brew list --cask claudoscope"
+          },
+          "install": {
+            "command": "brew install --cask cordwainersmith/claudoscope/claudoscope"
+          },
+          "uninstall": {
+            "command": "brew uninstall --cask claudoscope"
+          },
+          "update": {
+            "command": "brew upgrade --cask claudoscope"
           }
         }
       ]
