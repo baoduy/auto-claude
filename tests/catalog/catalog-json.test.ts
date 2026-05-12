@@ -56,6 +56,28 @@ describe('core-plugins group', () => {
   }
 });
 
+describe('context-optimization group', () => {
+  it('has claudoscope entry with default: false', () => {
+    const json = loadCatalog('../../catalog.json');
+    const group = json.groups.find((g: any) => g.id === 'context-optimization');
+    expect(group, 'context-optimization group must exist').toBeDefined();
+    const item = group.items.find((i: any) => i.id === 'claudoscope');
+    expect(item, 'claudoscope item must exist').toBeDefined();
+    expect(item.kind).toBe('tool');
+    expect(item.homepage).toBe('https://github.com/cordwainersmith/Claudoscope');
+    expect(item.default).toBe(false);
+    expect(item.install.command).toContain('brew install --cask');
+  });
+
+  it('codeburn is no longer a default selection', () => {
+    const json = loadCatalog('../../catalog.json');
+    const group = json.groups.find((g: any) => g.id === 'context-optimization');
+    const item = group?.items.find((i: any) => i.id === 'codeburn');
+    expect(item, 'codeburn item must exist').toBeDefined();
+    expect(item.default).toBe(false);
+  });
+});
+
 describe('mcp-servers group', () => {
   it('contains an mcp-servers pick-many group', () => {
     const json = loadCatalog('../../catalog.json');
