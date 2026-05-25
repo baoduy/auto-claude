@@ -70,6 +70,24 @@
               "label": "Registering MemPalace MCP server"
             }
           ]
+        },
+        {
+          "id": "claude-smart",
+          "name": "claude-smart",
+          "description": "Self-improvement plugin that turns corrections into durable skills Claude follows in future sessions",
+          "kind": "plugin",
+          "homepage": "https://github.com/ReflexioAI/claude-smart",
+          "defaultScope": "global",
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "claude-smart"
+          },
+          "install": {
+            "command": "npx claude-smart install"
+          },
+          "uninstall": {
+            "command": "npx claude-smart uninstall"
+          }
         }
       ]
     },
