@@ -199,6 +199,30 @@
               "label": "Installing graphify git hook"
             }
           ]
+        },
+        {
+          "id": "understand-anything",
+          "name": "Understand Anything",
+          "description": "Turn any codebase into an interactive knowledge graph with multi-agent analysis, guided tours, and diff impact visualization",
+          "kind": "plugin",
+          "homepage": "https://github.com/Lum1104/Understand-Anything",
+          "defaultScope": "global",
+          "detect": {
+            "command": "claude plugin list",
+            "versionMatch": "understand-anything"
+          },
+          "install": {
+            "command": "claude plugin marketplace add Lum1104/Understand-Anything && claude plugin install understand-anything"
+          },
+          "uninstall": {
+            "command": "claude plugin uninstall understand-anything"
+          },
+          "postInstall": [
+            {
+              "type": "claude-prompt",
+              "value": "Run /understand to analyze your codebase and build the knowledge graph, then /understand-dashboard to explore it visually."
+            }
+          ]
         }
       ]
     },
